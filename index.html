@@ -13,22 +13,18 @@
         .tap-btn:active { transform: scale(0.95); }
         #status { margin-top: 15px; color: #88a; font-size: 14px; min-height: 20px; }
         
-        /* Спільні стилі для екранів помилок */
         .error-screen { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; background: #05070d; position: fixed; inset: 0; z-index: 100; overflow-y: auto; }
         .error-icon { font-size: 60px; margin-bottom: 10px; }
         .error-title { color: #ff4d4d; font-size: 22px; font-weight: bold; margin-bottom: 15px; }
         
-        /* Блок з інструкціями (Крок 1) */
         .steps-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; width: 100%; max-width: 320px; margin-bottom: 20px; text-align: left; box-sizing: border-box; }
         .steps-box div { color: #cbd5e1; font-size: 14px; margin-bottom: 10px; line-height: 1.4; }
         .steps-box div:last-child { margin-bottom: 0; }
         .step-num { color: #00f0ff; font-weight: bold; margin-right: 5px; }
         
-        /* Блок для написання адміну (Крок 2) */
         .support-box { display: none; background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; width: 100%; max-width: 320px; margin-bottom: 20px; box-sizing: border-box; }
         .support-box textarea { width: 100%; height: 80px; background: #05070d; border: 1px solid #334155; color: white; border-radius: 8px; padding: 10px; font-family: inherit; resize: none; box-sizing: border-box; }
         
-        /* Кнопки */
         .action-btn { width: 100%; max-width: 320px; background: #1e293b; border: 1px solid #334155; color: white; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-sizing: border-box; }
         .action-btn.primary { background: #ff4d4d; border-color: #ff4d4d; }
         .action-btn:active { opacity: 0.8; }
@@ -44,7 +40,7 @@
         <div id="status">Готово до гри</div>
     </div>
 
-    <!-- ЕКРАН ПОМИЛКИ (КРОК 1: ІНСТРУКЦІЇ) -->
+    <!-- ЕКРАН ПОМИЛКИ (КРОК 1) -->
     <div class="error-screen" id="errorStep1">
         <div class="error-icon">🚧</div>
         <div class="error-title">Виникла помилка з'єднання</div>
@@ -60,17 +56,17 @@
         <button class="action-btn primary" onclick="showSupportScreen()">😔 Не допомогло, написати адміну</button>
     </div>
 
-    <!-- ЕКРАН ПІДТРИМКИ (КРОК 2: НАПИСАТИ АДМІНУ) -->
+    <!-- ЕКРАН ПІДТРИМКИ (КРОК 2) -->
     <div class="error-screen" id="errorStep2">
         <div class="error-icon">✉️</div>
         <div class="error-title">Зв'язок з адміністрацією</div>
-        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">Опишіть, що саме сталося, і ми спробуємо допомогти.</div>
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">Опишіть, що саме сталося.</div>
         
         <div class="support-box" style="display: block;">
-            <textarea id="supportMessage" placeholder="Наприклад: натискаю TAP, пише помилку з'єднання..."></textarea>
+            <textarea id="supportMessage" placeholder="Наприклад: натискаю TAP, пише помилку..."></textarea>
         </div>
         
-        <button class="action-btn primary" onclick="sendSupport()" id="supportBtn">📨 Надіслати повідомлення</button>
+        <button class="action-btn primary" onclick="sendSupport()" id="supportBtn">📨 Надіслати</button>
         <button class="action-btn" onclick="backToError()">◀️ Назад</button>
     </div>
 
@@ -132,7 +128,7 @@
                 });
                 
                 if (response.ok) {
-                    tg.showAlert("✅ Повідомлення надіслано! Адміністратор зв'яжеться з вами.");
+                    tg.showAlert("✅ Повідомлення надіслано!");
                     document.getElementById('supportMessage').value = '';
                     backToError();
                 } else {
@@ -141,22 +137,33 @@
             } catch (e) {
                 tg.showAlert("❌ Не вдалося відправити. Сервер недоступний.");
             } finally {
-                btn.innerText = "📨 Надіслати повідомлення";
+                btn.innerText = "📨 Надіслати";
                 btn.disabled = false;
             }
         }
 
         // --- ЛОГІКА ГРИ ---
+        let isProcessing = false; // Захист від подвійних кліків
+
         tapBtn.addEventListener('click', async () => {
+            if (isProcessing) return;
+            isProcessing = true;
+
             balance += 1;
             balanceEl.innerText = balance + ' NC';
             tg.HapticFeedback.impactOccurred('light');
 
             try {
+                // Додаємо таймаут для запиту, щоб не чекати вічність
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 сек
+
                 const response = await fetch(API_URL + '/api/click', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': tg.initData }
+                    headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': tg.initData },
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 
                 if (!response.ok) throw new Error("Server error");
                 
@@ -165,7 +172,10 @@
             } catch (error) {
                 statusEl.innerText = "❌ Помилка збереження";
                 statusEl.style.color = "#ff6b6b";
+                // Показуємо екран помилки ТІЛЬКИ якщо сервер реально не відповів
                 setTimeout(showError, 500); 
+            } finally {
+                isProcessing = false;
             }
         });
     </script>
