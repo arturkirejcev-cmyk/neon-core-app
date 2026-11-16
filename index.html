@@ -6,130 +6,199 @@
     <title>Shadow Syndicate</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg: #0a0a0a; --panel: #1a1a1a; --accent: #ff0055; --text: #ffffff; --gold: #ffd700; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        :root { --bg: #0a0a0a; --panel: #1a1a1a; --accent: #ff0055; --text: #ffffff; --gold: #ffd700; --green: #00ff88; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        .screen { display: none; flex-direction: column; padding: 20px; height: 100%; box-sizing: border-box; overflow-y: auto; }
+        .screen { display: none; flex-direction: column; padding: 20px; height: 100%; box-sizing: border-box; overflow-y: auto; padding-bottom: 80px; }
         .screen.active { display: flex; }
         
-        h1, h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        h1, h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
         h1 { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
 
-        /* Екран вибору */
-        .business-card { background: var(--panel); border: 1px solid #333; border-radius: 15px; padding: 15px; margin-bottom: 15px; text-align: center; cursor: pointer; transition: 0.3s; }
-        .business-card:active { transform: scale(0.98); }
-        .business-card h3 { margin: 10px 0; color: var(--gold); }
-        .business-card p { font-size: 14px; color: #aaa; margin: 5px 0; }
-        .business-img { font-size: 50px; margin-bottom: 10px; }
+        /* Вибір бізнесу */
+        .business-card { background: var(--panel); border: 1px solid #333; border-radius: 15px; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: 0.3s; }
+        .business-card:active { transform: scale(0.98); border-color: var(--accent); }
+        .business-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+        .business-img { font-size: 40px; background: #222; padding: 10px; border-radius: 12px; }
+        .business-title h3 { margin: 0; color: var(--gold); font-size: 18px; }
+        .business-stats { font-size: 13px; line-height: 1.5; }
+        .plus { color: var(--green); }
+        .minus { color: #ff4d4d; }
 
-        /* Ігровий екран */
-        .top-bar { display: flex; justify-content: space-between; background: var(--panel); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333; }
-        .balance { font-size: 20px; font-weight: bold; color: var(--gold); }
+        /* Головна */
+        .profile-header { background: linear-gradient(180deg, #2a0a15 0%, var(--panel) 100%); border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #440011; margin-bottom: 20px; }
+        .profile-balance { font-size: 32px; color: var(--gold); font-weight: 900; margin: 10px 0; }
         
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-box { background: var(--panel); padding: 15px; border-radius: 10px; border: 1px solid #333; text-align: center; }
+        .stat-val { font-size: 18px; color: var(--accent); font-weight: bold; margin-top: 5px;}
+
+        /* Карта */
         .map-container { display: grid; gap: 10px; }
-        .map-item { background: var(--panel); border: 1px solid #333; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .map-item { background: var(--panel); border: 1px solid #333; border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .map-item.rebelling { border-color: var(--accent); animation: pulse 1s infinite alternate; }
-        
         @keyframes pulse { from { box-shadow: 0 0 5px var(--accent); } to { box-shadow: 0 0 20px var(--accent); } }
+        .biz-info { flex: 1; }
+        .biz-name { font-weight: bold; font-size: 15px; margin-bottom: 4px;}
+        .biz-finance { font-size: 12px; color: #aaa; }
+        .biz-profit { color: var(--green); font-size: 12px; font-weight: bold;}
         
-        .btn { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; width: 100%; }
+        /* Кнопки */
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 5px; width: 100%; font-size: 12px; }
         .btn.secondary { background: #333; }
+        .btn.green { background: var(--green); color: #000; }
         .btn:active { opacity: 0.8; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Бізнес вкладка */
+        .upgrade-card { background: var(--panel); border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .upgrade-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; }
 
         /* Нижнє меню */
-        .bottom-nav { margin-top: auto; background: #111; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #333; }
-        .nav-btn { background: none; border: none; color: #777; font-size: 12px; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #111; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 10; }
+        .nav-btn { background: none; border: none; color: #777; font-size: 10px; display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 25%; }
         .nav-btn.active { color: var(--accent); }
-        .nav-btn span { font-size: 20px; margin-bottom: 5px; }
+        .nav-btn span { font-size: 22px; margin-bottom: 3px; }
 
-        /* Екран помилки/підтримки */
-        .error-screen { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; background: #05070d; position: fixed; inset: 0; z-index: 100; }
-        .error-icon { font-size: 60px; margin-bottom: 10px; }
-        .error-title { color: #ff4d4d; font-size: 22px; font-weight: bold; margin-bottom: 15px; }
-        .steps-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; width: 100%; max-width: 320px; margin-bottom: 20px; text-align: left; box-sizing: border-box; }
-        .steps-box div { color: #cbd5e1; font-size: 14px; margin-bottom: 10px; }
-        .step-num { color: #00f0ff; font-weight: bold; margin-right: 5px; }
-        .support-box { display: none; background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; width: 100%; max-width: 320px; margin-bottom: 20px; box-sizing: border-box; }
-        .support-box textarea { width: 100%; height: 80px; background: #05070d; border: 1px solid #334155; color: white; border-radius: 8px; padding: 10px; font-family: inherit; box-sizing: border-box; }
-        .action-btn { width: 100%; max-width: 320px; background: #1e293b; border: 1px solid #334155; color: white; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-sizing: border-box; }
-        .action-btn.primary { background: #ff4d4d; border-color: #ff4d4d; }
+        /* Екран помилок */
+        .error-screen { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; background: var(--bg); position: fixed; inset: 0; z-index: 100; }
+        .error-screen.active { display: flex; }
     </style>
 </head>
 <body>
 
-    <!-- ЕКРАН ВИБОРУ БІЗНЕСУ -->
+    <!-- ЕКРАН ВИБОРУ -->
     <div id="selectScreen" class="screen active">
         <h1>Твій Шлях</h1>
-        <p style="text-align: center; color: #aaa; font-size: 14px; margin-bottom: 20px;">Обери бізнес, з якого ти почнеш будувати свою імперію.</p>
+        <p style="text-align: center; color: #aaa; font-size: 14px; margin-bottom: 20px;">Обери бізнес, з якого ти почнеш будувати імперію.</p>
         
         <div class="business-card" onclick="createPlayer('casino')">
-            <div class="business-img">💎</div>
-            <h3>Підпільне Казино</h3>
-            <p>+ Високий прибуток</p>
-            <p>- Висока оренда, часті бунти</p>
+            <div class="business-header">
+                <div class="business-img">💎</div>
+                <div class="business-title">
+                    <h3>Підпільне Казино</h3>
+                    <div style="font-size: 11px; color: #666;">Гра високих ставок</div>
+                </div>
+            </div>
+            <div class="business-stats">
+                <div class="plus">+ Найвищий дохід: 800 DC/год</div>
+                <div class="plus">+ Швидке зростання прибутку</div>
+                <div class="minus">- Висока оренда: 500 DC/год</div>
+                <div class="minus">- NPC стають злими дуже швидко (x2)</div>
+            </div>
         </div>
         
         <div class="business-card" onclick="createPlayer('factory')">
-            <div class="business-img">🏭</div>
-            <h3>Підпільний Завод</h3>
-            <p>+ Стабільний середній дохід</p>
-            <p>- Повільне зростання</p>
+            <div class="business-header">
+                <div class="business-img">🏭</div>
+                <div class="business-title">
+                    <h3>Підпільний Завод</h3>
+                    <div style="font-size: 11px; color: #666;">Стабільний бізнес</div>
+                </div>
+            </div>
+            <div class="business-stats">
+                <div class="plus">+ Стабільний дохід: 400 DC/год</div>
+                <div class="plus">+ Низька оренда: 150 DC/год</div>
+                <div class="minus">- Повільне зростання</div>
+                <div class="minus">- Дорогі покращення (x1.5)</div>
+            </div>
         </div>
         
         <div class="business-card" onclick="createPlayer('club')">
-            <div class="business-img">🎭</div>
-            <h3>Нічний Клуб</h3>
-            <p>+ Швидкі гроші</p>
-            <p>- Часті атаки конкурентів</p>
+            <div class="business-header">
+                <div class="business-img">🎭</div>
+                <div class="business-title">
+                    <h3>Нічний Клуб</h3>
+                    <div style="font-size: 11px; color: #666;">Збалансований варіант</div>
+                </div>
+            </div>
+            <div class="business-stats">
+                <div class="plus">+ Середній дохід: 600 DC/год</div>
+                <div class="plus">+ NPC бунтують повільно (x0.8)</div>
+                <div class="minus">- Середня оренда: 300 DC/год</div>
+                <div class="minus">- Часті атаки інших гравців (PvP)</div>
+            </div>
         </div>
     </div>
 
-    <!-- ГОЛОВНИЙ ЕКРАН ГРИ -->
-    <div id="gameScreen" class="screen">
-        <div class="top-bar">
-            <div>
-                <div style="font-size: 12px; color: #aaa;">Твій баланс</div>
-                <div class="balance" id="balanceDisplay">0 DC</div>
+    <!-- ГОЛОВНА -->
+    <div id="homeTab" class="screen">
+        <div class="profile-header">
+            <div style="font-size: 50px;">🕶️</div>
+            <div style="font-size: 18px; font-weight: bold; margin-top: 10px;" id="homeUsername">Гравець</div>
+            <div class="profile-balance"><span id="homeBalance">0</span> <span style="font-size: 16px;">DC</span></div>
+            <div style="font-size: 12px; color: #aaa;">Готівка (Dirty Cash)</div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div style="font-size: 12px; color: #aaa;">Твій Бізнес</div>
+                <div class="stat-val" id="homeBizType">-</div>
             </div>
-            <div style="text-align: right;">
-                <div style="font-size: 12px; color: #aaa;">Твій бізнес</div>
-                <div id="playerBusinessDisplay" style="color: var(--gold);">...</div>
+            <div class="stat-box">
+                <div style="font-size: 12px; color: #aaa;">Рівень Бізнесу</div>
+                <div class="stat-val" id="homeBizLvl">1</div>
             </div>
         </div>
+    </div>
 
+    <!-- КАРТА -->
+    <div id="mapTab" class="screen">
         <h2>📍 Сіті 17</h2>
         <div class="map-container" id="mapContainer"></div>
+    </div>
 
-        <div class="bottom-nav">
-            <button class="nav-btn active"><span>🗺️</span> Карта</button>
-            <button class="nav-btn"><span>💼</span> Бізнес</button>
-            <button class="nav-btn"><span>💸</span> Обмінник</button>
+    <!-- БІЗНЕС -->
+    <div id="businessTab" class="screen">
+        <h2>💼 Мій Бізнес</h2>
+        
+        <div class="upgrade-card">
+            <div class="upgrade-header">
+                <span>Розширення бізнесу</span>
+                <span style="color: var(--gold);">Рівень: <span id="bizLvlDisplay">1</span></span>
+            </div>
+            <div style="font-size: 12px; color: #aaa; margin-bottom: 10px;">Збільшує базовий дохід вашого бізнесу.</div>
+            <button class="btn green" id="upgradeBizBtn" onclick="upgrade('business')">Покращити</button>
+        </div>
+
+        <div class="upgrade-card">
+            <div class="upgrade-header">
+                <span>Найм Охорони</span>
+                <span style="color: var(--accent);">Рівень: <span id="secLvlDisplay">1</span></span>
+            </div>
+            <div style="font-size: 12px; color: #aaa; margin-bottom: 10px;">Зменшує швидкість, з якою NPC бунтують.</div>
+            <button class="btn" id="upgradeSecBtn" onclick="upgrade('security')">Найняти</button>
         </div>
     </div>
 
-    <!-- ЕКРАН ПОМИЛКИ (КРОК 1) -->
-    <div class="error-screen" id="errorStep1">
-        <div class="error-icon">🚧</div>
-        <div class="error-title">Помилка з'єднання</div>
-        <div class="steps-box">
-            <div><span class="step-num">1.</span> Перевірте інтернет.</div>
-            <div><span class="step-num">2.</span> Перейдіть з Wi-Fi на 4G.</div>
-            <div><span class="step-num">3.</span> Увімкніть VPN.</div>
-            <div><span class="step-num">4.</span> Перезавантажте сторінку.</div>
+    <!-- ОБМІННИК -->
+    <div id="exchangeTab" class="screen">
+        <h2>💸 Обмінник</h2>
+        <div class="stat-box" style="padding: 30px; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">💱</div>
+            <div style="font-weight: bold; margin-bottom: 5px;">Курс: 1000 DC = 1 GRAM</div>
+            <div style="color: #ff4d4d; font-size: 12px; margin-top: 10px;">Виведення коштів на гаманець TON відкриється найближчим часом.</div>
         </div>
-        <button class="action-btn" onclick="location.reload()">🔄 Спробувати ще раз</button>
-        <button class="action-btn primary" onclick="showSupportScreen()">😔 Написати адміну</button>
     </div>
 
-    <!-- ЕКРАН ПІДТРИМКИ (КРОК 2) -->
-    <div class="error-screen" id="errorStep2">
-        <div class="error-icon">✉️</div>
-        <div class="error-title">Зв'язок з адміністрацією</div>
-        <div class="support-box" style="display: block;">
-            <textarea id="supportMessage" placeholder="Опишіть проблему..."></textarea>
+    <!-- НИЖНЄ МЕНЮ -->
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+        <button class="nav-btn active" onclick="switchTab('home', this)"><span>🏠</span> Головна</button>
+        <button class="nav-btn" onclick="switchTab('map', this)"><span>🗺️</span> Карта</button>
+        <button class="nav-btn" onclick="switchTab('business', this)"><span>💼</span> Бізнес</button>
+        <button class="nav-btn" onclick="switchTab('exchange', this)"><span>💸</span> Обмін</button>
+    </div>
+
+    <!-- ПОМИЛКА -->
+    <div class="error-screen" id="errorScreen">
+        <div style="font-size: 60px; margin-bottom: 10px;">🚧</div>
+        <h2 style="color: #ff4d4d;">Помилка з'єднання</h2>
+        <div style="text-align: left; font-size: 14px; line-height: 1.8; margin: 20px 0;">
+            <div>1. Перевірте інтернет.</div>
+            <div>2. Перейдіть на 4G.</div>
+            <div>3. Увімкніть VPN.</div>
         </div>
-        <button class="action-btn primary" onclick="sendSupport()" id="supportBtn">📨 Надіслати</button>
-        <button class="action-btn" onclick="backToError()">◀️ Назад</button>
+        <button class="btn" onclick="location.reload()">🔄 Спробувати ще раз</button>
     </div>
 
     <script>
@@ -139,127 +208,128 @@
 
         const API_URL = "https://neon.91-208-184-101.sslip.io"; 
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_user";
-        const userName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.username : "tester";
+        const userName = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.username : "Гравець";
 
-        const selectScreen = document.getElementById('selectScreen');
-        const gameScreen = document.getElementById('gameScreen');
-        const errorStep1 = document.getElementById('errorStep1');
-        const errorStep2 = document.getElementById('errorStep2');
-        
-        const balanceDisplay = document.getElementById('balanceDisplay');
-        const playerBusinessDisplay = document.getElementById('playerBusinessDisplay');
-        const mapContainer = document.getElementById('mapContainer');
+        let playerData = null;
 
-        // --- ЕКРАНИ ПОМИЛОК ---
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(tabId + 'Tab').classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            if (tabId === 'map') loadMap();
+        }
+
         function showError() {
-            gameScreen.classList.remove('active');
-            selectScreen.classList.remove('active');
-            errorStep1.style.display = 'flex';
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('errorScreen').classList.add('active');
         }
 
-        function showSupportScreen() {
-            errorStep1.style.display = 'none';
-            errorStep2.style.display = 'flex';
-        }
-
-        function backToError() {
-            errorStep2.style.display = 'none';
-            errorStep1.style.display = 'flex';
-        }
-
-        async function sendSupport() {
-            const msg = document.getElementById('supportMessage').value;
-            const btn = document.getElementById('supportBtn');
-            if (!msg.trim()) { tg.showAlert("Напишіть текст."); return; }
-            btn.innerText = "⏳ Відправляємо..."; btn.disabled = true;
-            try {
-                const response = await fetch(API_URL + '/api/support', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg, user_id: userId, username: userName })
-                });
-                if (response.ok) {
-                    tg.showAlert("✅ Повідомлення надіслано!");
-                    document.getElementById('supportMessage').value = '';
-                    backToError();
-                } else { throw new Error(); }
-            } catch (e) { tg.showAlert("❌ Не вдалося відправити."); } 
-            finally { btn.innerText = "📨 Надіслати"; btn.disabled = false; }
-        }
-
-        // --- ІГРОВА ЛОГІКА ---
         async function init() {
             try {
                 const res = await fetch(`${API_URL}/api/player/${userId}`);
                 const data = await res.json();
                 
                 if (data.status === "new") {
-                    selectScreen.classList.add('active');
-                    gameScreen.classList.remove('active');
+                    document.getElementById('selectScreen').classList.add('active');
                 } else {
-                    selectScreen.classList.remove('active');
-                    gameScreen.classList.add('active');
-                    balanceDisplay.innerText = `${data.player.balance.toFixed(0)} DC`;
-                    playerBusinessDisplay.innerText = data.player.business_type.toUpperCase();
-                    loadMap();
+                    playerData = data.player;
+                    document.getElementById('selectScreen').classList.remove('active');
+                    document.getElementById('homeTab').classList.add('active');
+                    document.getElementById('bottomNav').style.display = 'flex';
+                    updateUI();
                 }
             } catch (e) { showError(); }
         }
 
+        function updateUI() {
+            if(!playerData) return;
+            
+            document.getElementById('homeUsername').innerText = playerData.username || "Гравець";
+            document.getElementById('homeBalance').innerText = playerData.balance.toFixed(0);
+            document.getElementById('homeBizType').innerText = playerData.business_type.toUpperCase();
+            document.getElementById('homeBizLvl').innerText = playerData.business_level;
+            
+            document.getElementById('bizLvlDisplay').innerText = playerData.business_level;
+            document.getElementById('secLvlDisplay').innerText = playerData.security_level;
+            
+            // Розрахунок вартості
+            document.getElementById('upgradeBizBtn').innerText = `Покращити за ${playerData.business_level * 1000} DC`;
+            document.getElementById('upgradeSecBtn').innerText = `Найняти за ${playerData.security_level * 500} DC`;
+        }
+
         async function createPlayer(type) {
             try {
-                tg.HapticFeedback.impactOccurred('medium');
                 const res = await fetch(`${API_URL}/api/create_player`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, username: userName, business_type: type })
                 });
                 const data = await res.json();
-                if (data.status === "success") { init(); } 
-                else { tg.showAlert("Помилка створення: " + (data.message || "")); }
+                if (data.status === "success") { init(); }
+                else { tg.showAlert("Помилка: " + data.message); }
             } catch (e) { showError(); }
         }
 
         async function loadMap() {
             try {
-                const res = await fetch(`${API_URL}/api/map/city17?user_id=${userId}`);
+                const res = await fetch(`${API_URL}/api/map/city17`);
                 const data = await res.json();
-                mapContainer.innerHTML = "";
+                const container = document.getElementById('mapContainer');
+                container.innerHTML = "";
                 
                 data.businesses.forEach(biz => {
                     const isRebelling = biz.is_rebelling === 1;
+                    // Чистий прибуток = Дохід - Оренда
+                    const profit = biz.income - biz.rent;
+                    
                     let html = `
                         <div class="map-item ${isRebelling ? 'rebelling' : ''}">
-                            <div>
-                                <div style="font-weight: bold;">${biz.name}</div>
-                                <div style="font-size: 12px; color: #aaa;">Дохід: ${biz.income} DC</div>
-                                <div style="font-size: 12px; color: ${isRebelling ? '#ff0055' : '#aaa'}">
+                            <div class="biz-info">
+                                <div class="biz-name">${biz.name}</div>
+                                <div class="biz-finance">Дохід: ${biz.income} | Оренда: ${biz.rent}</div>
+                                <div class="biz-profit">Чистий прибуток: ${profit} DC</div>
+                                <div style="font-size: 11px; color: ${isRebelling ? '#ff0055' : '#aaa'}; margin-top: 5px;">
                                     ${isRebelling ? '🔥 БУНТ!' : 'Гнів: ' + biz.anger_level + '%'}
                                 </div>
                             </div>
-                            <div>
+                            <div style="width: 110px;">
                     `;
                     if (isRebelling) {
-                        html += `<button class="btn" onclick="doAction(${biz.id}, 'appease')">Заспокоїти (50)</button>`;
+                        html += `<button class="btn" style="background:#333;" onclick="doAction(${biz.id}, 'appease')">Заспокоїти<br>100 DC</button>`;
                     } else {
                         html += `
-                            <button class="btn" onclick="doAction(${biz.id}, 'collect')">Зібрати 30%</button>
-                            <button class="btn secondary" onclick="doAction(${biz.id}, 'appease')">Заспокоїти (50)</button>
+                            <button class="btn green" onclick="doAction(${biz.id}, 'collect')">Зібрати<br>30% (${(biz.income*0.3).toFixed(0)})</button>
                         `;
                     }
                     html += `</div></div>`;
-                    mapContainer.innerHTML += html;
+                    container.innerHTML += html;
                 });
             } catch (e) { showError(); }
         }
 
         async function doAction(bizId, actionType) {
             try {
-                tg.HapticFeedback.impactOccurred('light');
                 const res = await fetch(`${API_URL}/api/action`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, business_id: bizId, action: actionType })
+                });
+                const data = await res.json();
+                tg.showAlert(data.message);
+                if (data.status === "success") { 
+                    await init(); 
+                    loadMap(); 
+                }
+            } catch (e) { showError(); }
+        }
+
+        async function upgrade(type) {
+            try {
+                const res = await fetch(`${API_URL}/api/upgrade`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, upgrade_type: type })
                 });
                 const data = await res.json();
                 tg.showAlert(data.message);
