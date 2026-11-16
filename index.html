@@ -34,18 +34,18 @@
         <h1>NEON CORE</h1>
         <div class="balance" id="balance">0 NC</div>
         <button class="tap-btn" id="tapBtn">TAP</button>
-        <div id="status"></div>
+        <div id="status">Готово до гри</div>
     </div>
 
     <!-- ЕКРАН ПОМИЛКИ -->
     <div class="error-screen" id="errorScreen">
         <div class="error-icon">🚧</div>
         <div class="error-title">Помилка з'єднання</div>
-        <div class="error-text">Ми не можемо з'єднатися з сервером. Можливо, ваш провайдер блокує з'єднання.</div>
+        <div class="error-text">Сервер тимчасово недоступний. Можливо, ваш провайдер блокує з'єднання.</div>
         
         <div class="support-box">
-            <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px; text-align: left;">Опишіть проблему і ми спробуємо допомогти:</div>
-            <textarea id="supportMessage" placeholder="Наприклад: не відкривається гра, білий екран..."></textarea>
+            <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px; text-align: left;">Опишіть проблему, і ми спробуємо допомогти:</div>
+            <textarea id="supportMessage" placeholder="Наприклад: не відкривається гра, помилка з'єднання..."></textarea>
             <button onclick="sendSupport()" id="supportBtn">📨 Надіслати в підтримку</button>
         </div>
         
@@ -62,23 +62,16 @@
         const errorScreen = document.getElementById('errorScreen');
         const statusEl = document.getElementById('status');
 
-        // Перевірка з'єднання
-        async function checkConnection() {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-                const response = await fetch(API_URL + '/api/health', { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (!response.ok) throw new Error("Server error");
-                mainScreen.style.display = 'flex';
-                errorScreen.style.display = 'none';
-            } catch (error) {
-                mainScreen.style.display = 'none';
-                errorScreen.style.display = 'flex';
-                tg.HapticFeedback.notificationOccurred('error');
-            }
+        let balance = 0;
+        const balanceEl = document.getElementById('balance');
+        const tapBtn = document.getElementById('tapBtn');
+
+        // Функція показу екрану помилки
+        function showError() {
+            mainScreen.style.display = 'none';
+            errorScreen.style.display = 'flex';
+            tg.HapticFeedback.notificationOccurred('error');
         }
-        checkConnection();
 
         // Відправка в підтримку
         async function sendSupport() {
@@ -94,6 +87,7 @@
             btn.disabled = true;
 
             try {
+                // Навіть якщо основний сервер не працює, спробуємо відправити
                 const response = await fetch(API_URL + '/api/support', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -111,18 +105,14 @@
                     throw new Error();
                 }
             } catch (e) {
-                tg.showAlert("❌ Не вдалося відправити. Спробуйте пізніше.");
+                tg.showAlert("❌ Не вдалося відправити. Сервер недоступний. Спробуйте увімкнути VPN.");
             } finally {
                 btn.innerText = "📨 Надіслати в підтримку";
                 btn.disabled = false;
             }
         }
 
-        // Гра
-        let balance = 0;
-        const balanceEl = document.getElementById('balance');
-        const tapBtn = document.getElementById('tapBtn');
-
+        // Логіка гри
         tapBtn.addEventListener('click', async () => {
             balance += 1;
             balanceEl.innerText = balance + ' NC';
@@ -133,14 +123,16 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': tg.initData }
                 });
-                if (!response.ok) throw new Error();
+                
+                if (!response.ok) throw new Error("Server error");
+                
                 statusEl.innerText = "✅ Збережено";
                 statusEl.style.color = "#5ee0a0";
             } catch (error) {
                 statusEl.innerText = "❌ Помилка збереження";
                 statusEl.style.color = "#ff6b6b";
-                mainScreen.style.display = 'none';
-                errorScreen.style.display = 'flex';
+                // Показуємо екран помилки ТІЛЬКИ якщо сервер реально не відповів
+                setTimeout(showError, 1000); 
             }
         });
     </script>
