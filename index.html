@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON CORE</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { margin: 0; background: #05070d; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        h1 { color: #00f0ff; text-shadow: 0 0 10px #00f0ff; }
+        .balance { font-size: 32px; font-weight: bold; margin: 20px 0; }
+        .tap-btn { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, #00f0ff, #0055ff); border: none; font-size: 20px; font-weight: bold; color: white; cursor: pointer; box-shadow: 0 0 20px #00f0ff; transition: transform 0.1s; }
+        .tap-btn:active { transform: scale(0.95); }
+        #status { margin-top: 15px; color: #88a; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <h1>NEON CORE</h1>
+    <div class="balance" id="balance">0 NC</div>
+    <button class="tap-btn" id="tapBtn">TAP</button>
+    <div id="status"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        // Адреса твого сервера (VPS)
+        const API_URL = "https://neon.91-208-184-101.sslip.io"; 
+
+        let balance = 0;
+        const balanceEl = document.getElementById('balance');
+        const tapBtn = document.getElementById('tapBtn');
+        const statusEl = document.getElementById('status');
+
+        tapBtn.addEventListener('click', async () => {
+            // 1. Одразу оновлюємо на екрані (для швидкості)
+            balance += 1;
+            balanceEl.innerText = balance + ' NC';
+            tg.HapticFeedback.impactOccurred('light');
+
+            // 2. Відправляємо дані на сервер
+            try {
+                const response = await fetch(API_URL + '/api/click', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': tg.initData // Передаємо дані юзера
+                    }
+                });
+
+                if (!response.ok) throw new Error("Помилка сервера");
+                
+                const data = await response.json();
+                statusEl.innerText = "✅ Збережено на сервері";
+                statusEl.style.color = "#5ee0a0";
+            } catch (error) {
+                statusEl.innerText = "❌ Не вдалося зберегти";
+                statusEl.style.color = "#ff6b6b";
+            }
+        });
+    </script>
+</body>
+</html>
