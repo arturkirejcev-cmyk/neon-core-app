@@ -43,27 +43,26 @@
     <!-- ЕКРАН ПОМИЛКИ (КРОК 1) -->
     <div class="error-screen" id="errorStep1">
         <div class="error-icon">🚧</div>
-        <div class="error-title">Виникла помилка з'єднання</div>
+        <div class="error-title">Помилка з'єднання</div>
         
         <div class="steps-box">
             <div><span class="step-num">1.</span> Перевірте інтернет.</div>
             <div><span class="step-num">2.</span> Перейдіть з Wi-Fi на мобільний інтернет (4G).</div>
-            <div><span class="step-num">3.</span> Якщо не допомогло — увімкніть VPN.</div>
+            <div><span class="step-num">3.</span> Увімкніть VPN.</div>
             <div><span class="step-num">4.</span> Перезавантажте сторінку.</div>
         </div>
         
         <button class="action-btn" onclick="location.reload()">🔄 Спробувати ще раз</button>
-        <button class="action-btn primary" onclick="showSupportScreen()">😔 Не допомогло, написати адміну</button>
+        <button class="action-btn primary" onclick="showSupportScreen()">😔 Написати адміну</button>
     </div>
 
     <!-- ЕКРАН ПІДТРИМКИ (КРОК 2) -->
     <div class="error-screen" id="errorStep2">
         <div class="error-icon">✉️</div>
         <div class="error-title">Зв'язок з адміністрацією</div>
-        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">Опишіть, що саме сталося.</div>
         
         <div class="support-box" style="display: block;">
-            <textarea id="supportMessage" placeholder="Наприклад: натискаю TAP, пише помилку..."></textarea>
+            <textarea id="supportMessage" placeholder="Опишіть проблему..."></textarea>
         </div>
         
         <button class="action-btn primary" onclick="sendSupport()" id="supportBtn">📨 Надіслати</button>
@@ -85,12 +84,10 @@
         const balanceEl = document.getElementById('balance');
         const tapBtn = document.getElementById('tapBtn');
 
-        // --- ЛОГІКА ПОКАЗУ ЕКРАНІВ ---
         function showError() {
             mainScreen.style.display = 'none';
             errorStep1.style.display = 'flex';
             errorStep2.style.display = 'none';
-            tg.HapticFeedback.notificationOccurred('error');
         }
 
         function showSupportScreen() {
@@ -103,13 +100,12 @@
             errorStep1.style.display = 'flex';
         }
 
-        // --- ВІДПРАВКА В ПІДТРИМКУ ---
         async function sendSupport() {
             const msg = document.getElementById('supportMessage').value;
             const btn = document.getElementById('supportBtn');
             
             if (!msg.trim()) {
-                tg.showAlert("Будь ласка, напишіть текст повідомлення.");
+                tg.showAlert("Напишіть текст.");
                 return;
             }
 
@@ -135,47 +131,45 @@
                     throw new Error();
                 }
             } catch (e) {
-                tg.showAlert("❌ Не вдалося відправити. Сервер недоступний.");
+                tg.showAlert("❌ Не вдалося відправити.");
             } finally {
                 btn.innerText = "📨 Надіслати";
                 btn.disabled = false;
             }
         }
 
-        // --- ЛОГІКА ГРИ ---
-        let isProcessing = false; // Захист від подвійних кліків
-
+        // --- ГОЛОВНА ЛОГІКА (Як було спочатку, але з обробкою помилок) ---
         tapBtn.addEventListener('click', async () => {
-            if (isProcessing) return;
-            isProcessing = true;
-
+            // 1. Оновлюємо цифру на екрані
             balance += 1;
             balanceEl.innerText = balance + ' NC';
             tg.HapticFeedback.impactOccurred('light');
 
+            // 2. Намагаємося відправити на сервер
             try {
-                // Додаємо таймаут для запиту, щоб не чекати вічність
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 сек
-
                 const response = await fetch(API_URL + '/api/click', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Telegram-Init-Data': tg.initData },
-                    signal: controller.signal
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': tg.initData
+                    }
                 });
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) throw new Error("Server error");
-                
+
+                // Якщо сервер відповів помилкою (наприклад, 404 або 500)
+                if (!response.ok) {
+                    throw new Error("Server error");
+                }
+
+                // Якщо все добре — пишемо "Збережено"
                 statusEl.innerText = "✅ Збережено";
                 statusEl.style.color = "#5ee0a0";
             } catch (error) {
+                // Якщо сталася помилка мережі (сервер недоступний)
                 statusEl.innerText = "❌ Помилка збереження";
                 statusEl.style.color = "#ff6b6b";
+                
                 // Показуємо екран помилки ТІЛЬКИ якщо сервер реально не відповів
-                setTimeout(showError, 500); 
-            } finally {
-                isProcessing = false;
+                setTimeout(showError, 1000); 
             }
         });
     </script>
