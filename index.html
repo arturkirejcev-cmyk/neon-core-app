@@ -13,23 +13,30 @@
         .tap-btn:active { transform: scale(0.95); }
         #status { margin-top: 15px; color: #88a; font-size: 14px; min-height: 20px; }
         
-        /* Стилі для екрану помилки */
+        /* Спільні стилі для екранів помилок */
         .error-screen { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; background: #05070d; position: fixed; inset: 0; z-index: 100; overflow-y: auto; }
-        .error-icon { font-size: 60px; margin-bottom: 20px; }
-        .error-title { color: #ff4d4d; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-        .error-text { color: #b0c4de; font-size: 14px; line-height: 1.5; margin-bottom: 20px; max-width: 300px; }
+        .error-icon { font-size: 60px; margin-bottom: 10px; }
+        .error-title { color: #ff4d4d; font-size: 22px; font-weight: bold; margin-bottom: 15px; }
         
-        .support-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; width: 100%; max-width: 320px; margin-bottom: 20px; }
+        /* Блок з інструкціями (Крок 1) */
+        .steps-box { background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; width: 100%; max-width: 320px; margin-bottom: 20px; text-align: left; box-sizing: border-box; }
+        .steps-box div { color: #cbd5e1; font-size: 14px; margin-bottom: 10px; line-height: 1.4; }
+        .steps-box div:last-child { margin-bottom: 0; }
+        .step-num { color: #00f0ff; font-weight: bold; margin-right: 5px; }
+        
+        /* Блок для написання адміну (Крок 2) */
+        .support-box { display: none; background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; width: 100%; max-width: 320px; margin-bottom: 20px; box-sizing: border-box; }
         .support-box textarea { width: 100%; height: 80px; background: #05070d; border: 1px solid #334155; color: white; border-radius: 8px; padding: 10px; font-family: inherit; resize: none; box-sizing: border-box; }
-        .support-box button { width: 100%; margin-top: 10px; background: #ff4d4d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .support-box button:active { background: #cc0000; }
         
-        .retry-btn { background: #1e293b; border: 1px solid #334155; color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; cursor: pointer; }
+        /* Кнопки */
+        .action-btn { width: 100%; max-width: 320px; background: #1e293b; border: 1px solid #334155; color: white; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 10px; box-sizing: border-box; }
+        .action-btn.primary { background: #ff4d4d; border-color: #ff4d4d; }
+        .action-btn:active { opacity: 0.8; }
     </style>
 </head>
 <body>
 
-    <!-- ГОЛОВНИЙ ЕКРАН -->
+    <!-- ГОЛОВНИЙ ЕКРАН ГРИ -->
     <div id="mainScreen" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100vh;">
         <h1>NEON CORE</h1>
         <div class="balance" id="balance">0 NC</div>
@@ -37,19 +44,34 @@
         <div id="status">Готово до гри</div>
     </div>
 
-    <!-- ЕКРАН ПОМИЛКИ -->
-    <div class="error-screen" id="errorScreen">
+    <!-- ЕКРАН ПОМИЛКИ (КРОК 1: ІНСТРУКЦІЇ) -->
+    <div class="error-screen" id="errorStep1">
         <div class="error-icon">🚧</div>
-        <div class="error-title">Помилка з'єднання</div>
-        <div class="error-text">Сервер тимчасово недоступний. Можливо, ваш провайдер блокує з'єднання.</div>
+        <div class="error-title">Виникла помилка з'єднання</div>
         
-        <div class="support-box">
-            <div style="font-size: 13px; color: #94a3b8; margin-bottom: 8px; text-align: left;">Опишіть проблему, і ми спробуємо допомогти:</div>
-            <textarea id="supportMessage" placeholder="Наприклад: не відкривається гра, помилка з'єднання..."></textarea>
-            <button onclick="sendSupport()" id="supportBtn">📨 Надіслати в підтримку</button>
+        <div class="steps-box">
+            <div><span class="step-num">1.</span> Перевірте інтернет.</div>
+            <div><span class="step-num">2.</span> Перейдіть з Wi-Fi на мобільний інтернет (4G).</div>
+            <div><span class="step-num">3.</span> Якщо не допомогло — увімкніть VPN.</div>
+            <div><span class="step-num">4.</span> Перезавантажте сторінку.</div>
         </div>
         
-        <button class="retry-btn" onclick="location.reload()">🔄 Спробувати ще раз</button>
+        <button class="action-btn" onclick="location.reload()">🔄 Спробувати ще раз</button>
+        <button class="action-btn primary" onclick="showSupportScreen()">😔 Не допомогло, написати адміну</button>
+    </div>
+
+    <!-- ЕКРАН ПІДТРИМКИ (КРОК 2: НАПИСАТИ АДМІНУ) -->
+    <div class="error-screen" id="errorStep2">
+        <div class="error-icon">✉️</div>
+        <div class="error-title">Зв'язок з адміністрацією</div>
+        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 15px;">Опишіть, що саме сталося, і ми спробуємо допомогти.</div>
+        
+        <div class="support-box" style="display: block;">
+            <textarea id="supportMessage" placeholder="Наприклад: натискаю TAP, пише помилку з'єднання..."></textarea>
+        </div>
+        
+        <button class="action-btn primary" onclick="sendSupport()" id="supportBtn">📨 Надіслати повідомлення</button>
+        <button class="action-btn" onclick="backToError()">◀️ Назад</button>
     </div>
 
     <script>
@@ -59,21 +81,33 @@
 
         const API_URL = "https://neon.91-208-184-101.sslip.io"; 
         const mainScreen = document.getElementById('mainScreen');
-        const errorScreen = document.getElementById('errorScreen');
+        const errorStep1 = document.getElementById('errorStep1');
+        const errorStep2 = document.getElementById('errorStep2');
         const statusEl = document.getElementById('status');
 
         let balance = 0;
         const balanceEl = document.getElementById('balance');
         const tapBtn = document.getElementById('tapBtn');
 
-        // Функція показу екрану помилки
+        // --- ЛОГІКА ПОКАЗУ ЕКРАНІВ ---
         function showError() {
             mainScreen.style.display = 'none';
-            errorScreen.style.display = 'flex';
+            errorStep1.style.display = 'flex';
+            errorStep2.style.display = 'none';
             tg.HapticFeedback.notificationOccurred('error');
         }
 
-        // Відправка в підтримку
+        function showSupportScreen() {
+            errorStep1.style.display = 'none';
+            errorStep2.style.display = 'flex';
+        }
+
+        function backToError() {
+            errorStep2.style.display = 'none';
+            errorStep1.style.display = 'flex';
+        }
+
+        // --- ВІДПРАВКА В ПІДТРИМКУ ---
         async function sendSupport() {
             const msg = document.getElementById('supportMessage').value;
             const btn = document.getElementById('supportBtn');
@@ -87,7 +121,6 @@
             btn.disabled = true;
 
             try {
-                // Навіть якщо основний сервер не працює, спробуємо відправити
                 const response = await fetch(API_URL + '/api/support', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -99,20 +132,21 @@
                 });
                 
                 if (response.ok) {
-                    tg.showAlert("✅ Повідомлення надіслано! Адміністратор зв'яжеться з вами найближчим часом.");
+                    tg.showAlert("✅ Повідомлення надіслано! Адміністратор зв'яжеться з вами.");
                     document.getElementById('supportMessage').value = '';
+                    backToError();
                 } else {
                     throw new Error();
                 }
             } catch (e) {
-                tg.showAlert("❌ Не вдалося відправити. Сервер недоступний. Спробуйте увімкнути VPN.");
+                tg.showAlert("❌ Не вдалося відправити. Сервер недоступний.");
             } finally {
-                btn.innerText = "📨 Надіслати в підтримку";
+                btn.innerText = "📨 Надіслати повідомлення";
                 btn.disabled = false;
             }
         }
 
-        // Логіка гри
+        // --- ЛОГІКА ГРИ ---
         tapBtn.addEventListener('click', async () => {
             balance += 1;
             balanceEl.innerText = balance + ' NC';
@@ -131,8 +165,7 @@
             } catch (error) {
                 statusEl.innerText = "❌ Помилка збереження";
                 statusEl.style.color = "#ff6b6b";
-                // Показуємо екран помилки ТІЛЬКИ якщо сервер реально не відповів
-                setTimeout(showError, 1000); 
+                setTimeout(showError, 500); 
             }
         });
     </script>
