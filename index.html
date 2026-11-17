@@ -8,53 +8,57 @@
     <style>
         :root { --bg: #0a0a0a; --panel: #1a1a1a; --accent: #ff0055; --text: #ffffff; --gold: #ffd700; --green: #00ff88; --cyan: #00e5ff; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Верхня панель */
         .top-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #111; border-bottom: 1px solid #333; z-index: 50; }
         .clock-box { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #aaa; }
+        
+        /* Бігучий рядок новин */
         .news-ticker { background: #220000; border-bottom: 1px solid #550000; padding: 5px 0; white-space: nowrap; overflow: hidden; box-sizing: border-box; }
         .news-ticker span { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; color: var(--gold); font-size: 12px; font-weight: bold; }
         @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+
         .screen { display: none; flex-direction: column; padding: 15px; height: calc(100% - 85px); box-sizing: border-box; overflow-y: auto; padding-bottom: 80px; }
         .screen.active { display: flex; }
+        
         h1, h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
         h1 { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
-        .profile-header { background: linear-gradient(180deg, #2a0a15 0%, var(--panel) 100%); border-radius: 15px; padding: 15px; border: 1px solid #440011; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; position: relative;}
-        .right-hand-box { display: flex; flex-direction: column; align-items: center; width: 60px; cursor: pointer;}
-        .right-hand-avatar { width: 50px; height: 50px; border-radius: 50%; background: #222; border: 2px solid #555; object-fit: cover;}
-        .right-hand-label { font-size: 9px; color: #aaa; margin-top: 5px; text-align: center; line-height: 1.1;}
-        .profile-center { flex: 1; display: flex; flex-direction: column;}
-        .profile-nick { font-size: 18px; font-weight: 900; color: var(--cyan); text-align: left;}
-        .profile-title { font-size: 12px; font-weight: bold; color: var(--gold); text-shadow: 0 0 5px var(--gold); margin-top: 2px; text-align: left;}
-        .profile-level { display: inline-block; background: var(--gold); color: #000; padding: 1px 6px; border-radius: 8px; font-weight: bold; font-size: 10px; margin-top: 5px; align-self: flex-start;}
-        .xp-bar-container { background: #333; height: 6px; border-radius: 3px; margin-top: 5px; overflow: hidden; width: 100%;}
+
+        .profile-header { background: linear-gradient(180deg, #2a0a15 0%, var(--panel) 100%); border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #440011; margin-bottom: 15px; }
+        .profile-nick { font-size: 22px; font-weight: 900; color: var(--cyan); letter-spacing: 1px; }
+        .profile-title { font-size: 14px; font-weight: bold; color: var(--gold); text-shadow: 0 0 8px var(--gold); margin-top: 5px; letter-spacing: 1px; }
+        .profile-level { display: inline-block; background: var(--gold); color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 12px; margin-top: 5px; }
+        .xp-bar-container { background: #333; height: 8px; border-radius: 4px; margin-top: 10px; overflow: hidden; }
         .xp-bar-fill { height: 100%; background: var(--cyan); width: 0%; transition: width 0.3s; }
-        .xp-text { font-size: 10px; color: #aaa; margin-top: 3px; text-align: right; }
-        .player-avatar { width: 70px; height: 70px; border-radius: 12px; background: #222; border: 2px solid var(--accent); object-fit: cover; cursor: pointer;}
-        .profile-balance { font-size: 28px; color: var(--gold); font-weight: 900; margin: 15px 0; text-align: center;}
+        .xp-text { font-size: 11px; color: #aaa; margin-top: 5px; text-align: right; }
+        .profile-balance { font-size: 28px; color: var(--gold); font-weight: 900; margin: 15px 0; }
+
         .setup-screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 300; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
         .setup-screen.active { display: flex; }
         .nick-input { background: #111; border: 1px solid #333; color: white; padding: 15px; border-radius: 8px; font-size: 16px; width: 100%; max-width: 250px; margin: 15px 0; text-align: center; }
         .error-msg { color: #ff4d4d; font-size: 12px; margin-bottom: 10px; height: 15px; }
+
         .anger-box { background: var(--panel); border-radius: 10px; padding: 10px; margin-bottom: 15px; }
         .anger-bar { height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 5px; }
         .anger-fill { height: 100%; background: linear-gradient(90deg, #ffd700, #ff0055); width: 0%; }
+        
         .stat-box { background: var(--panel); padding: 15px; border-radius: 10px; border: 1px solid #333; text-align: center; margin-bottom: 10px;}
         .stat-val { font-size: 18px; color: var(--accent); font-weight: bold; margin-top: 5px;}
+
         .btn { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; margin-top: 5px;}
         .btn.green { background: var(--green); color: #000; }
         .btn.gold { background: var(--gold); color: #000; }
         .btn:active { opacity: 0.8; }
+
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #111; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 10; }
         .nav-btn { background: none; border: none; color: #777; font-size: 10px; display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 25%; }
         .nav-btn.active { color: var(--accent); }
         .nav-btn span { font-size: 22px; margin-bottom: 3px; }
+
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
         .modal.active { display: flex; }
-        .modal-content { background: var(--panel); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 100%; max-width: 300px; text-align: center; max-height: 80vh; overflow-y: auto;}
-        .npc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;}
-        .npc-card { background: #222; border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; border: 1px solid #333;}
-        .npc-card:hover { border-color: var(--gold); }
-        .npc-card img { width: 100%; border-radius: 8px; margin-bottom: 5px;}
-        .npc-card span { font-size: 12px; font-weight: bold; display: block;}
+        .modal-content { background: var(--panel); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 100%; max-width: 300px; text-align: center; }
+
         .error-screen { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; background: var(--bg); position: fixed; inset: 0; z-index: 100; }
         .error-screen.active { display: flex; }
         .support-box { display: none; width: 100%; margin-top: 10px; }
@@ -66,6 +70,8 @@
     <div class="top-header">
         <div class="clock-box"><span>⏱</span><span id="gameTimeDisplay">Завантаження...</span></div>
     </div>
+    
+    <!-- СТРІЧКА НОВИН -->
     <div class="news-ticker">
         <span id="newsText">Завантаження новин...</span>
     </div>
@@ -86,30 +92,26 @@
 
     <div id="homeTab" class="screen">
         <div class="profile-header">
-            <div class="right-hand-box" onclick="openNpcModal()">
-                <img id="rightHandImg" class="right-hand-avatar" src="https://i.ibb.co/6H5x6QY/empty-npc.png" alt="Права рука">
-                <div class="right-hand-label">Права рука</div>
-            </div>
-            <div class="profile-center">
-                <div class="profile-nick" id="homeNickname">-</div>
-                <div class="profile-title" id="homeTitle" style="display:none;"></div>
-                <div class="profile-level" id="homeLevel">Рівень 1</div>
-                <div class="xp-bar-container"><div class="xp-bar-fill" id="xpFill"></div></div>
-                <div class="xp-text"><span id="xpText">0 / 500 XP</span></div>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center;">
-                <img id="playerAvatarImg" class="player-avatar" src="https://i.ibb.co/6H5x6QY/empty-npc.png" onclick="changeAvatar()" alt="Аватар">
-            </div>
+            <div class="profile-nick" id="homeNickname">-</div>
+            <div class="profile-title" id="homeTitle" style="display:none;"></div>
+            <div class="profile-level" id="homeLevel">Рівень 1</div>
+            <div class="profile-balance"><span id="homeBalance">0</span> <span style="font-size: 16px;">DC</span></div>
+            <div class="xp-bar-container"><div class="xp-bar-fill" id="xpFill"></div></div>
+            <div class="xp-text"><span id="xpText">0 / 500 XP</span></div>
         </div>
-        <div class="profile-balance"><span id="homeBalance">0</span> <span style="font-size: 16px;">DC</span></div>
         <div class="anger-box">
             <div style="display: flex; justify-content: space-between; font-size: 12px;">
                 <span>Гнів Синдикату</span><span id="angerText" style="color: var(--accent); font-weight: bold;">0%</span>
             </div>
             <div class="anger-bar"><div class="anger-fill" id="angerFill"></div></div>
         </div>
+        
         <div id="npcSection" style="display: none;">
-            <h3 style="color: var(--gold);">Ваші Захисники (20+ рівень)</h3>
+            <h3 style="color: var(--gold);">Ваші NPC (20+ рівень)</h3>
+            <div class="stat-box">
+                <div>Права рука: <span id="rightHandStatus">Немає</span></div>
+                <button class="btn gold" onclick="hireNpc('right_hand')">Найняти (10,000 DC)</button>
+            </div>
             <div class="stat-box">
                 <div>Захисники: <span id="bodyguardCount">0</span></div>
                 <button class="btn" onclick="hireNpc('bodyguard')">Найняти (2000 DC)</button>
@@ -129,6 +131,7 @@
         <h2>👑 Епічні Клікухи</h2>
         <div id="titlesList"></div>
     </div>
+
     <div id="exchangeTab" class="screen"><h2>💸 Обмінник</h2></div>
 
     <div class="bottom-nav" id="bottomNav" style="display: none;">
@@ -136,24 +139,6 @@
         <button class="nav-btn" onclick="switchTab('map', this)"><span>🗺️</span> Карта</button>
         <button class="nav-btn" onclick="switchTab('titles', this)"><span>👑</span> Титули</button>
         <button class="nav-btn" onclick="switchTab('exchange', this)"><span>💸</span> Обмін</button>
-    </div>
-
-    <div class="modal" id="npcModal">
-        <div class="modal-content">
-            <h2 style="color: var(--gold); font-size: 18px;">Оберіть Праву Руку</h2>
-            <p style="color: #aaa; font-size: 12px;">Вони дадуть вам пасивний бонус (10 000 DC)</p>
-            <div class="npc-grid" id="npcList"></div>
-            <button class="btn" style="margin-top: 15px; background: #333;" onclick="document.getElementById('npcModal').classList.remove('active')">Закрити</button>
-        </div>
-    </div>
-
-    <div class="modal" id="avatarModal">
-        <div class="modal-content">
-            <h2 style="color: var(--gold); font-size: 18px;">Змінити Аватарку</h2>
-            <input type="text" id="avatarUrlInput" class="nick-input" placeholder="Вставте URL картинки" style="margin: 15px 0; font-size:14px;">
-            <button class="btn gold" onclick="saveAvatar()">Зберегти</button>
-            <button class="btn" style="margin-top: 10px; background: #333;" onclick="document.getElementById('avatarModal').classList.remove('active')">Скасувати</button>
-        </div>
     </div>
 
     <div class="modal" id="endDayModal">
@@ -182,22 +167,18 @@
         const tg = window.Telegram.WebApp;
         tg.ready(); tg.expand();
         const API_URL = "https://neon.91-208-184-101.sslip.io"; 
-        const userId = tg.initDataUnsafe.user ? String(tg.initDataUnsafe.user.id) : "test_user";
+        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_user";
         const tgUsername = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.username : "Гравець";
-        const INIT_DATA = tg.initData || "";
         
         let playerData = null;
         let timerInterval = null;
         let newsInterval = null;
         let chosenNick = "";
-        const defaultAvatar = "https://i.ibb.co/6H5x6QY/empty-npc.png";
 
-        // Додаємо захист до всіх запитів
-        const apiHeaders = { "Content-Type": "application/json", "X-Telegram-Init-Data": INIT_DATA };
-
+        // Завантаження новин
         async function loadNews() {
             try {
-                const res = await fetch(`${API_URL}/api/events`, { headers: apiHeaders });
+                const res = await fetch(`${API_URL}/api/events`);
                 const data = await res.json();
                 if(data.events && data.events.length > 0) {
                     document.getElementById('newsText').innerText = data.events.join("  ⭐  ");
@@ -211,7 +192,7 @@
             if(nick.length < 3) { err.innerText = "Мінімум 3 символи"; return; }
             err.innerText = "Перевірка...";
             try {
-                const res = await fetch(`${API_URL}/api/check_nickname/${encodeURIComponent(nick)}`, { headers: apiHeaders });
+                const res = await fetch(`${API_URL}/api/check_nickname/${nick}`);
                 const data = await res.json();
                 if(data.available) {
                     chosenNick = nick; err.innerText = "";
@@ -241,82 +222,16 @@
             if(!msg) return;
             try {
                 await fetch(API_URL + '/api/support', {
-                    method: 'POST', headers: apiHeaders,
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: msg, user_id: userId, username: tgUsername })
                 });
                 tg.showAlert("✅ Повідомлення надіслано!");
             } catch(e) { tg.showAlert("❌ Помилка"); }
         }
 
-        function changeAvatar() {
-            if(playerData.avatar_url) {
-                document.getElementById('avatarUrlInput').value = playerData.avatar_url;
-            }
-            document.getElementById('avatarModal').classList.add('active');
-        }
-
-        async function saveAvatar() {
-            const url = document.getElementById('avatarUrlInput').value.trim();
-            if(!url) return;
-            try {
-                const res = await fetch(`${API_URL}/api/update_avatar`, {
-                    method: 'POST', headers: apiHeaders,
-                    body: JSON.stringify({ user_id: userId, avatar_url: url })
-                });
-                const data = await res.json();
-                if(data.status === "success") {
-                    document.getElementById('avatarModal').classList.remove('active');
-                    init();
-                }
-            } catch(e) { tg.showAlert("Помилка"); }
-        }
-
-        async function openNpcModal() {
-            if(playerData.level < 20) {
-                tg.showAlert("Права рука доступна з 20 рівня!");
-                return;
-            }
-            if(playerData.npc.right_hand_npc_id > 0) {
-                tg.showAlert("У вас вже є права рука!");
-                return;
-            }
-            try {
-                const res = await fetch(`${API_URL}/api/available_npcs/${userId}`, { headers: apiHeaders });
-                const data = await res.json();
-                if(data.status === "locked") { tg.showAlert(data.message); return; }
-                const container = document.getElementById('npcList');
-                container.innerHTML = "";
-                data.npcs.forEach(n => {
-                    container.innerHTML += `
-                        <div class="npc-card" onclick="hireRightHand(${n.id})">
-                            <img src="${n.image_url}" alt="${n.name}">
-                            <span>${n.name}</span>
-                            <div style="font-size:10px; color:var(--green); margin-top:2px;">+5% ${n.bonus_type === 'income' ? 'доходу' : 'зниження гніву'}</div>
-                        </div>
-                    `;
-                });
-                document.getElementById('npcModal').classList.add('active');
-            } catch(e) { tg.showAlert("Помилка завантаження NPC"); }
-        }
-
-        async function hireRightHand(npcId) {
-            try {
-                const res = await fetch(`${API_URL}/api/hire_right_hand`, {
-                    method: 'POST', headers: apiHeaders,
-                    body: JSON.stringify({ user_id: userId, npc_id: npcId })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") {
-                    document.getElementById('npcModal').classList.remove('active');
-                    init();
-                }
-            } catch(e) { tg.showAlert("Помилка"); }
-        }
-
         async function init() {
             try {
-                const res = await fetch(`${API_URL}/api/player/${userId}`, { headers: apiHeaders });
+                const res = await fetch(`${API_URL}/api/player/${userId}`);
                 const data = await res.json();
                 if (data.status === "new") {
                     document.getElementById('setupScreen').classList.add('active');
@@ -329,7 +244,7 @@
                     startTimer();
                     loadNews();
                     if(newsInterval) clearInterval(newsInterval);
-                    newsInterval = setInterval(loadNews, 30000);
+                    newsInterval = setInterval(loadNews, 30000); // Оновлення новин кожні 30 сек
                 }
             } catch (e) { 
                 document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -347,7 +262,7 @@
             }
             
             document.getElementById('homeLevel').innerText = "Рівень " + playerData.level;
-            document.getElementById('homeBalance').innerText = Math.round(playerData.balance);
+            document.getElementById('homeBalance').innerText = playerData.balance.toFixed(0);
             let xpPercent = (playerData.xp / playerData.xp_needed) * 100;
             document.getElementById('xpFill').style.width = xpPercent + "%";
             document.getElementById('xpText').innerText = `${playerData.xp} / ${playerData.xp_needed} XP`;
@@ -355,18 +270,9 @@
             document.getElementById('angerText').innerText = anger + "%";
             document.getElementById('angerFill').style.width = anger + "%";
 
-            document.getElementById('playerAvatarImg').src = playerData.avatar_url || defaultAvatar;
-            
-            if (playerData.npc.right_hand_npc_id > 0) {
-                document.getElementById('rightHandImg').src = playerData.npc.npc_img;
-                document.getElementById('rightHandImg').style.borderColor = 'var(--gold)';
-            } else {
-                document.getElementById('rightHandImg').src = defaultAvatar;
-                document.getElementById('rightHandImg').style.borderColor = '#555';
-            }
-
             if (playerData.level >= 20) {
                 document.getElementById('npcSection').style.display = 'block';
+                document.getElementById('rightHandStatus').innerText = playerData.npc.right_hand ? "✅ Найнято" : "❌ Немає";
                 document.getElementById('bodyguardCount').innerText = playerData.npc.bodyguards;
             }
 
@@ -375,13 +281,9 @@
 
         function startTimer() {
             if(timerInterval) clearInterval(timerInterval);
-            if(!playerData) return;
-            let serverTimeLeft = playerData.time_left;
-            const syncAt = Date.now();
-
             timerInterval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - syncAt) / 1000);
-                let left = Math.max(0, serverTimeLeft - elapsed);
+                if(!playerData) return;
+                let left = playerData.time_left;
                 if (left <= 0) {
                     document.getElementById('gameTimeDisplay').innerText = "День завершено!";
                     document.getElementById('endDayModal').classList.add('active');
@@ -391,13 +293,14 @@
                 let m = Math.floor((left % 3600) / 60);
                 let s = left % 60;
                 document.getElementById('gameTimeDisplay').innerText = `${h}г ${m}хв ${s}с`;
+                playerData.time_left -= 1;
             }, 1000);
         }
 
         async function createPlayer(type) {
             try {
                 const res = await fetch(`${API_URL}/api/create_player`, {
-                    method: 'POST', headers: apiHeaders,
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, username: tgUsername, nickname: chosenNick, business_type: type })
                 });
                 const data = await res.json();
@@ -409,7 +312,7 @@
         async function endDayAction(action) {
             try {
                 const res = await fetch(`${API_URL}/api/end_day`, {
-                    method: 'POST', headers: apiHeaders,
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, action: action })
                 });
                 const data = await res.json();
@@ -426,12 +329,14 @@
             container.innerHTML = "<div style='text-align:center;'>Завантаження...</div>";
             try {
                 const url = region === 'city17' ? `${API_URL}/api/map/city17` : `${API_URL}/api/map/dark_street/${userId}`;
-                const res = await fetch(url, { headers: apiHeaders });
+                const res = await fetch(url);
                 const data = await res.json();
+                
                 if (data.status === "locked") {
                     container.innerHTML = `<div style="text-align:center; padding: 30px; color: #ff4d4d; font-weight: bold;">🔒 ${data.message}</div>`;
                     return;
                 }
+                
                 container.innerHTML = "";
                 if (data.businesses) {
                     data.businesses.forEach(biz => {
@@ -464,13 +369,15 @@
             const container = document.getElementById('titlesList');
             container.innerHTML = "Завантаження...";
             try {
-                const res = await fetch(`${API_URL}/api/titles`, { headers: apiHeaders });
+                const res = await fetch(`${API_URL}/api/titles`);
                 const data = await res.json();
                 container.innerHTML = "";
+                
                 data.titles.forEach(t => {
                     let btnHtml = t.owner 
                         ? `<div style="color: var(--gold); font-weight:bold;">Власник: ${t.owner}</div>`
                         : `<button class="btn gold" onclick="claimTitle('${t.id}')">Спробувати отримати</button>`;
+                        
                     container.innerHTML += `
                         <div class="stat-box" style="text-align:left; margin-bottom:10px;">
                             <div style="color: var(--gold); font-weight: bold; font-size:16px;">${t.name}</div>
@@ -486,7 +393,7 @@
         async function claimTitle(titleId) {
             try {
                 const res = await fetch(`${API_URL}/api/claim_title`, {
-                    method: 'POST', headers: apiHeaders,
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, title_id: titleId })
                 });
                 const data = await res.json();
@@ -498,7 +405,7 @@
         async function hireNpc(type) {
             try {
                 const res = await fetch(`${API_URL}/api/hire_npc`, {
-                    method: 'POST', headers: apiHeaders,
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, type: type })
                 });
                 const data = await res.json();
@@ -511,7 +418,7 @@
             if(!confirm("Ви впевнені, що хочете напасти? Ліміт: 2 атаки на годину.")) return;
             try {
                 const res = await fetch(`${API_URL}/api/attack`, {
-                    method: 'POST', headers: apiHeaders,
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ attacker_id: userId, target_id: targetId })
                 });
                 const data = await res.json();
