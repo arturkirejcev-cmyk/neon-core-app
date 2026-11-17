@@ -2,12 +2,12 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shadow Syndicate</title>
-    <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --bg: #0a0a0a; --panel: #1a1a1a; --accent: #ff0055; --text: #ffffff; --gold: #ffd700; --green: #00ff88; --cyan: #00e5ff; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         .top-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #111; border-bottom: 1px solid #333; z-index: 50; }
         .clock-box { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #aaa; }
@@ -22,15 +22,12 @@
         h1, h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
         h1 { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
 
-        /* Стиль профілю */
         .profile-header { background: linear-gradient(180deg, #2a0a15 0%, var(--panel) 100%); border-radius: 15px; padding: 15px; border: 1px solid #440011; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; position: relative;}
         
-        /* Блок права рука (зліва) */
         .right-hand-box { display: flex; flex-direction: column; align-items: center; width: 60px; cursor: pointer;}
         .right-hand-avatar { width: 50px; height: 50px; border-radius: 50%; background: #222; border: 2px solid #555; object-fit: cover;}
         .right-hand-label { font-size: 9px; color: #aaa; margin-top: 5px; text-align: center; line-height: 1.1;}
         
-        /* Центральна частина (нік + XP) */
         .profile-center { flex: 1; display: flex; flex-direction: column;}
         .profile-nick { font-size: 18px; font-weight: 900; color: var(--cyan); text-align: left;}
         .profile-title { font-size: 12px; font-weight: bold; color: var(--gold); text-shadow: 0 0 5px var(--gold); margin-top: 2px; text-align: left;}
@@ -39,7 +36,6 @@
         .xp-bar-fill { height: 100%; background: var(--cyan); width: 0%; transition: width 0.3s; }
         .xp-text { font-size: 10px; color: #aaa; margin-top: 3px; text-align: right; }
         
-        /* Блок аватарки гравця (справа) */
         .player-avatar { width: 70px; height: 70px; border-radius: 12px; background: #222; border: 2px solid var(--accent); object-fit: cover; cursor: pointer;}
 
         .profile-balance { font-size: 28px; color: var(--gold); font-weight: 900; margin: 15px 0; text-align: center;}
@@ -70,7 +66,6 @@
         .modal.active { display: flex; }
         .modal-content { background: var(--panel); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 100%; max-width: 300px; text-align: center; max-height: 80vh; overflow-y: auto;}
 
-        /* Стиль для сітки NPC */
         .npc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;}
         .npc-card { background: #222; border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; border: 1px solid #333;}
         .npc-card:hover { border-color: var(--gold); }
@@ -81,21 +76,9 @@
         .error-screen.active { display: flex; }
         .support-box { display: none; width: 100%; margin-top: 10px; }
         .support-box textarea { width: 100%; height: 80px; background: #111; border: 1px solid #333; color: white; border-radius: 8px; padding: 10px; box-sizing: border-box; }
-
-        /* Екран завантаження */
-        #loadingScreen { position:fixed; inset:0; z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden; background:#050203; transition:opacity .3s ease, visibility .3s ease; }
-        #loadingScreen.is-hidden { opacity:0; visibility:hidden; pointer-events:none; }
-        .loader-title { color: var(--accent); font-size: 32px; text-shadow: 0 0 20px var(--accent); font-weight: 900; letter-spacing: 2px; animation: pulse 1.5s infinite alternate; }
-        .loader-sub { color: #666; letter-spacing: 5px; margin-top: 10px; font-size: 12px; }
-        @keyframes pulse { from { opacity: 0.8; transform: scale(0.98); } to { opacity: 1; transform: scale(1.02); } }
     </style>
 </head>
 <body>
-
-    <div id="loadingScreen">
-        <div class="loader-title">SHADOW SYNDICATE</div>
-        <div class="loader-sub">ЗАВАНТАЖЕННЯ...</div>
-    </div>
 
     <div class="top-header">
         <div class="clock-box"><span>⏱</span><span id="gameTimeDisplay">Завантаження...</span></div>
@@ -242,11 +225,6 @@
         let chosenNick = "";
         const defaultAvatar = "https://i.ibb.co/6H5x6QY/empty-npc.png";
 
-        // Приховуємо екран завантаження через 1 секунду
-        setTimeout(() => {
-            document.getElementById('loadingScreen').classList.add('is-hidden');
-        }, 1000);
-
         async function loadNews() {
             try {
                 const res = await fetch(`${API_URL}/api/events`);
@@ -257,6 +235,7 @@
             } catch(e) {}
         }
 
+        // ВИПРАВЛЕНО: Перевірка нікнейму
         async function checkNickname() {
             const nick = document.getElementById('nickInput').value.trim();
             const err = document.getElementById('nickError');
@@ -266,12 +245,17 @@
                 const res = await fetch(`${API_URL}/api/check_nickname/${nick}`);
                 const data = await res.json();
                 if(data.available) {
-                    chosenNick = nick; err.innerText = "";
+                    chosenNick = nick; 
+                    err.innerText = "";
                     document.getElementById('businessSelection').style.display = 'block';
                     document.getElementById('checkNickBtn').style.display = 'none';
                     document.getElementById('nickInput').style.display = 'none';
-                } else { err.innerText = "Цей нік вже зайнятий"; }
-            } catch(e) { err.innerText = "Помилка сервера"; }
+                } else { 
+                    err.innerText = "Цей нік вже зайнятий"; 
+                }
+            } catch(e) { 
+                err.innerText = "Помилка сервера"; 
+            }
         }
 
         function switchTab(tabId, btnElement) {
@@ -300,6 +284,7 @@
             } catch(e) { tg.showAlert("❌ Помилка"); }
         }
 
+        // ВИПРАВЛЕНО: Створення гравця
         async function createPlayer(type) {
             try {
                 const res = await fetch(`${API_URL}/api/create_player`, {
@@ -316,7 +301,7 @@
                 if (data.status === "success") { 
                     init(); 
                 } else { 
-                    tg.showAlert("Помилка: " + (data.message || "Невідома помилка")); 
+                    tg.showAlert("Помилка: " + (data.message || "Спробуйте інший нік")); 
                 }
             } catch (e) { 
                 tg.showAlert("Помилка з'єднання з сервером"); 
