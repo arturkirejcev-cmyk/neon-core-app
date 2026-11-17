@@ -1,565 +1,562 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shadow Syndicate</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root { --bg: #0a0a0a; --panel: #1a1a1a; --accent: #ff0055; --text: #ffffff; --gold: #ffd700; --green: #00ff88; --cyan: #00e5ff; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #111; border-bottom: 1px solid #333; z-index: 50; }
-        .clock-box { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #aaa; }
-        
-        .news-ticker { background: #220000; border-bottom: 1px solid #550000; padding: 5px 0; white-space: nowrap; overflow: hidden; box-sizing: border-box; }
-        .news-ticker span { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; color: var(--gold); font-size: 12px; font-weight: bold; }
-        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
-
-        .screen { display: none; flex-direction: column; padding: 15px; height: calc(100% - 85px); box-sizing: border-box; overflow-y: auto; padding-bottom: 80px; }
-        .screen.active { display: flex; }
-        
-        h1, h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
-        h1 { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
-
-        .profile-header { background: linear-gradient(180deg, #2a0a15 0%, var(--panel) 100%); border-radius: 15px; padding: 15px; border: 1px solid #440011; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; position: relative;}
-        
-        .right-hand-box { display: flex; flex-direction: column; align-items: center; width: 60px; cursor: pointer;}
-        .right-hand-avatar { width: 50px; height: 50px; border-radius: 50%; background: #222; border: 2px solid #555; object-fit: cover;}
-        .right-hand-label { font-size: 9px; color: #aaa; margin-top: 5px; text-align: center; line-height: 1.1;}
-        
-        .profile-center { flex: 1; display: flex; flex-direction: column;}
-        .profile-nick { font-size: 18px; font-weight: 900; color: var(--cyan); text-align: left;}
-        .profile-title { font-size: 12px; font-weight: bold; color: var(--gold); text-shadow: 0 0 5px var(--gold); margin-top: 2px; text-align: left;}
-        .profile-level { display: inline-block; background: var(--gold); color: #000; padding: 1px 6px; border-radius: 8px; font-weight: bold; font-size: 10px; margin-top: 5px; align-self: flex-start;}
-        .xp-bar-container { background: #333; height: 6px; border-radius: 3px; margin-top: 5px; overflow: hidden; width: 100%;}
-        .xp-bar-fill { height: 100%; background: var(--cyan); width: 0%; transition: width 0.3s; }
-        .xp-text { font-size: 10px; color: #aaa; margin-top: 3px; text-align: right; }
-        
-        .player-avatar { width: 70px; height: 70px; border-radius: 12px; background: #222; border: 2px solid var(--accent); object-fit: cover; cursor: pointer;}
-
-        .profile-balance { font-size: 28px; color: var(--gold); font-weight: 900; margin: 15px 0; text-align: center;}
-
-        .setup-screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 300; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .setup-screen.active { display: flex; }
-        .nick-input { background: #111; border: 1px solid #333; color: white; padding: 15px; border-radius: 8px; font-size: 16px; width: 100%; max-width: 250px; margin: 15px 0; text-align: center; }
-        .error-msg { color: #ff4d4d; font-size: 12px; margin-bottom: 10px; height: 15px; }
-
-        .anger-box { background: var(--panel); border-radius: 10px; padding: 10px; margin-bottom: 15px; }
-        .anger-bar { height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 5px; }
-        .anger-fill { height: 100%; background: linear-gradient(90deg, #ffd700, #ff0055); width: 0%; }
-        
-        .stat-box { background: var(--panel); padding: 15px; border-radius: 10px; border: 1px solid #333; text-align: center; margin-bottom: 10px;}
-        .stat-val { font-size: 18px; color: var(--accent); font-weight: bold; margin-top: 5px;}
-
-        .btn { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; margin-top: 5px;}
-        .btn.green { background: var(--green); color: #000; }
-        .btn.gold { background: var(--gold); color: #000; }
-        .btn:active { opacity: 0.8; }
-
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #111; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 10; }
-        .nav-btn { background: none; border: none; color: #777; font-size: 10px; display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 25%; }
-        .nav-btn.active { color: var(--accent); }
-        .nav-btn span { font-size: 22px; margin-bottom: 3px; }
-
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
-        .modal.active { display: flex; }
-        .modal-content { background: var(--panel); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 100%; max-width: 300px; text-align: center; max-height: 80vh; overflow-y: auto;}
-
-        .npc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;}
-        .npc-card { background: #222; border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; border: 1px solid #333;}
-        .npc-card:hover { border-color: var(--gold); }
-        .npc-card img { width: 100%; border-radius: 8px; margin-bottom: 5px;}
-        .npc-card span { font-size: 12px; font-weight: bold; display: block;}
-
-        .error-screen { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; background: var(--bg); position: fixed; inset: 0; z-index: 100; }
-        .error-screen.active { display: flex; }
-        .support-box { display: none; width: 100%; margin-top: 10px; }
-        .support-box textarea { width: 100%; height: 80px; background: #111; border: 1px solid #333; color: white; border-radius: 8px; padding: 10px; box-sizing: border-box; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Shadow Syndicate</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#0a0a0a;--panel:#1a1a1a;--accent:#ff0055;--text:#fff;--gold:#ffd700;--green:#00ff88;--cyan:#00e5ff;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.top-header{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:#111;border-bottom:1px solid #333;z-index:50;}
+.clock-box{display:flex;align-items:center;gap:8px;font-size:14px;color:#aaa;}
+.news-ticker{background:#220000;border-bottom:1px solid #550000;padding:5px 0;white-space:nowrap;overflow:hidden;}
+.news-ticker span{display:inline-block;padding-left:100%;animation:marquee 25s linear infinite;color:var(--gold);font-size:12px;font-weight:bold;}
+@keyframes marquee{0%{transform:translate(0,0)}100%{transform:translate(-100%,0)}}
+.screen{display:none;flex-direction:column;padding:15px;height:calc(100% - 85px);overflow-y:auto;padding-bottom:80px;}
+.screen.active{display:flex;}
+h1,h2{text-align:center;text-transform:uppercase;letter-spacing:2px;margin-top:0;}
+h1{color:var(--accent);text-shadow:0 0 10px var(--accent);}
+.profile-header{background:linear-gradient(180deg,#2a0a15 0%,var(--panel) 100%);border-radius:15px;padding:15px;border:1px solid #440011;margin-bottom:15px;display:flex;align-items:center;gap:15px;}
+.right-hand-box{display:flex;flex-direction:column;align-items:center;width:60px;cursor:pointer;}
+.right-hand-avatar{width:50px;height:50px;border-radius:50%;background:#222;border:2px solid #555;object-fit:cover;}
+.right-hand-label{font-size:9px;color:#aaa;margin-top:5px;text-align:center;line-height:1.1;}
+.profile-center{flex:1;display:flex;flex-direction:column;min-width:0;}
+.profile-nick{font-size:18px;font-weight:900;color:var(--cyan);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.profile-title{font-size:12px;font-weight:bold;color:var(--gold);margin-top:2px;}
+.profile-level{display:inline-block;background:var(--gold);color:#000;padding:1px 6px;border-radius:8px;font-weight:bold;font-size:10px;margin-top:5px;align-self:flex-start;}
+.xp-bar-container{background:#333;height:6px;border-radius:3px;margin-top:5px;overflow:hidden;width:100%;}
+.xp-bar-fill{height:100%;background:var(--cyan);width:0;transition:width .3s;}
+.xp-text{font-size:10px;color:#aaa;margin-top:3px;text-align:right;}
+.player-avatar{width:70px;height:70px;border-radius:12px;background:#222;border:2px solid var(--accent);object-fit:cover;cursor:pointer;}
+.profile-balance{font-size:28px;color:var(--gold);font-weight:900;margin:15px 0;text-align:center;}
+.setup-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:300;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;}
+.setup-screen.active{display:flex;}
+.nick-input{background:#111;border:1px solid #333;color:#fff;padding:15px;border-radius:8px;font-size:16px;width:100%;max-width:250px;margin:15px 0;text-align:center;}
+.error-msg{color:#ff4d4d;font-size:12px;margin-bottom:10px;min-height:15px;}
+.anger-box{background:var(--panel);border-radius:10px;padding:10px;margin-bottom:15px;}
+.anger-bar{height:10px;background:#333;border-radius:5px;overflow:hidden;margin-top:5px;}
+.anger-fill{height:100%;background:linear-gradient(90deg,#ffd700,#ff0055);width:0;transition:width .3s;}
+.stat-box{background:var(--panel);padding:15px;border-radius:10px;border:1px solid #333;text-align:center;margin-bottom:10px;}
+.stat-val{font-size:18px;color:var(--accent);font-weight:bold;margin-top:5px;}
+.btn{background:var(--accent);color:#fff;border:none;padding:12px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;font-size:14px;margin-top:5px;font-family:inherit;}
+.btn.green{background:var(--green);color:#000;}
+.btn.gold{background:var(--gold);color:#000;}
+.btn.gray{background:#333;}
+.btn:active{opacity:.8;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#111;display:flex;justify-content:space-around;padding:10px 0;border-top:1px solid #333;z-index:10;}
+.nav-btn{background:none;border:none;color:#777;font-size:10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;width:25%;font-family:inherit;}
+.nav-btn.active{color:var(--accent);}
+.nav-btn span{font-size:22px;margin-bottom:3px;}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal.active{display:flex;}
+.modal-content{background:var(--panel);border:1px solid #444;border-radius:15px;padding:20px;width:100%;max-width:340px;text-align:center;max-height:80vh;overflow-y:auto;}
+.npc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px;}
+.npc-card{background:#222;border-radius:10px;padding:10px;text-align:center;cursor:pointer;border:1px solid #333;color:inherit;font-family:inherit;}
+.npc-card:hover{border-color:var(--gold);}
+.npc-card img{width:100%;border-radius:8px;margin-bottom:5px;aspect-ratio:1;object-fit:cover;background:#111;}
+.npc-card span{font-size:12px;font-weight:bold;display:block;}
+.error-screen{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;background:var(--bg);position:fixed;inset:0;z-index:100;}
+.error-screen.active{display:flex;}
+.support-box{display:none;width:100%;margin-top:10px;}
+.support-box textarea{width:100%;height:80px;background:#111;border:1px solid #333;color:#fff;border-radius:8px;padding:10px;font-family:inherit;}
+.loading{text-align:center;padding:20px;color:#666;}
+</style>
 </head>
 <body>
 
-    <div class="top-header">
-        <div class="clock-box"><span>⏱</span><span id="gameTimeDisplay">Завантаження...</span></div>
-    </div>
-    
-    <div class="news-ticker">
-        <span id="newsText">Завантаження новин...</span>
-    </div>
+<div class="top-header">
+    <div class="clock-box"><span>⏱</span><span id="gameTimeDisplay">Завантаження...</span></div>
+</div>
 
-    <div id="setupScreen" class="setup-screen">
-        <h1>Хто ти?</h1>
-        <p style="color: #aaa; font-size: 14px;">Придумай свій псевдонім.</p>
-        <input type="text" id="nickInput" class="nick-input" placeholder="Твій псевдонім" maxlength="15">
-        <div id="nickError" class="error-msg"></div>
-        <div id="businessSelection" style="display: none; width: 100%; max-width: 300px;">
-            <p style="color: var(--gold); font-weight: bold; margin-bottom: 15px;">Обери перший бізнес:</p>
-            <div class="stat-box" onclick="createPlayer('casino')" style="cursor:pointer;"><h3>💎 Казино</h3></div>
-            <div class="stat-box" onclick="createPlayer('factory')" style="cursor:pointer;"><h3>🏭 Завод</h3></div>
-            <div class="stat-box" onclick="createPlayer('club')" style="cursor:pointer;"><h3>🎭 Клуб</h3></div>
-        </div>
-        <button class="btn" id="checkNickBtn" onclick="checkNickname()" style="max-width: 250px;">Перевірити нік</button>
+<div class="news-ticker"><span id="newsText">Завантаження новин...</span></div>
+
+<div id="setupScreen" class="setup-screen">
+    <h1>Хто ти?</h1>
+    <p style="color:#aaa;font-size:14px;">Придумай свій псевдонім.</p>
+    <input type="text" id="nickInput" class="nick-input" placeholder="Твій псевдонім" maxlength="15" autocomplete="off">
+    <div id="nickError" class="error-msg"></div>
+    <div id="businessSelection" style="display:none;width:100%;max-width:300px;">
+        <p style="color:var(--gold);font-weight:bold;margin-bottom:15px;">Обери перший бізнес:</p>
+        <div class="stat-box" onclick="createPlayer('casino')" style="cursor:pointer;"><h3>💎 Казино</h3></div>
+        <div class="stat-box" onclick="createPlayer('factory')" style="cursor:pointer;"><h3>🏭 Завод</h3></div>
+        <div class="stat-box" onclick="createPlayer('club')" style="cursor:pointer;"><h3>🎭 Клуб</h3></div>
     </div>
+    <button class="btn" id="checkNickBtn" onclick="checkNickname()" style="max-width:250px;">Перевірити нік</button>
+</div>
 
-    <div id="homeTab" class="screen">
-        <div class="profile-header">
-            <div class="right-hand-box" onclick="openNpcModal()">
-                <img id="rightHandImg" class="right-hand-avatar" src="https://i.ibb.co/6H5x6QY/empty-npc.png" alt="Права рука">
-                <div class="right-hand-label">Права рука</div>
-            </div>
-            
-            <div class="profile-center">
-                <div class="profile-nick" id="homeNickname">-</div>
-                <div class="profile-title" id="homeTitle" style="display:none;"></div>
-                <div class="profile-level" id="homeLevel">Рівень 1</div>
-                <div class="xp-bar-container"><div class="xp-bar-fill" id="xpFill"></div></div>
-                <div class="xp-text"><span id="xpText">0 / 500 XP</span></div>
-            </div>
-            
-            <div style="display:flex; flex-direction:column; align-items:center;">
-                <img id="playerAvatarImg" class="player-avatar" src="https://i.ibb.co/6H5x6QY/empty-npc.png" onclick="changeAvatar()" alt="Аватар">
-            </div>
+<div id="homeTab" class="screen">
+    <div class="profile-header">
+        <div class="right-hand-box" onclick="openNpcModal()">
+            <img id="rightHandImg" class="right-hand-avatar" src="https://i.ibb.co/6H5x6QY/empty-npc.png" alt="Права рука">
+            <div class="right-hand-label">Права рука</div>
         </div>
-        
-        <div class="profile-balance"><span id="homeBalance">0</span> <span style="font-size: 16px;">DC</span></div>
-
-        <div class="anger-box">
-            <div style="display: flex; justify-content: space-between; font-size: 12px;">
-                <span>Гнів Синдикату</span><span id="angerText" style="color: var(--accent); font-weight: bold;">0%</span>
-            </div>
-            <div class="anger-bar"><div class="anger-fill" id="angerFill"></div></div>
+        <div class="profile-center">
+            <div class="profile-nick" id="homeNickname">-</div>
+            <div class="profile-title" id="homeTitle" style="display:none;"></div>
+            <div class="profile-level" id="homeLevel">Рівень 1</div>
+            <div class="xp-bar-container"><div class="xp-bar-fill" id="xpFill"></div></div>
+            <div class="xp-text"><span id="xpText">0 / 500 XP</span></div>
         </div>
-        
-        <div id="npcSection" style="display: none;">
-            <h3 style="color: var(--gold);">Ваші Захисники (20+ рівень)</h3>
-            <div class="stat-box">
-                <div>Захисники: <span id="bodyguardCount">0</span></div>
-                <button class="btn" onclick="hireNpc('bodyguard')">Найняти (2000 DC)</button>
-            </div>
+        <div style="display:flex;flex-direction:column;align-items:center;">
+            <img id="playerAvatarImg" class="player-avatar" src="https://i.ibb.co/6H5x6QY/empty-npc.png" onclick="changeAvatar()" alt="Аватар">
         </div>
     </div>
-
-    <div id="mapTab" class="screen">
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button class="btn" style="background: #333;" onclick="loadMap('city17')">Сіті 17</button>
-            <button class="btn" style="background: #440011;" onclick="loadMap('dark_street')">Темна Вулиця</button>
+    <div class="profile-balance"><span id="homeBalance">0</span> <span style="font-size:16px;">DC</span></div>
+    <div class="anger-box">
+        <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span>Гнів Синдикату</span><span id="angerText" style="color:var(--accent);font-weight:bold;">0%</span>
         </div>
-        <div class="map-container" id="mapContainer"></div>
+        <div class="anger-bar"><div class="anger-fill" id="angerFill"></div></div>
     </div>
-    
-    <div id="titlesTab" class="screen">
-        <h2>👑 Епічні Клікухи</h2>
-        <div id="titlesList"></div>
-    </div>
-
-    <div id="exchangeTab" class="screen"><h2>💸 Обмінник</h2></div>
-
-    <div class="bottom-nav" id="bottomNav" style="display: none;">
-        <button class="nav-btn active" onclick="switchTab('home', this)"><span>🏠</span> Головна</button>
-        <button class="nav-btn" onclick="switchTab('map', this)"><span>🗺️</span> Карта</button>
-        <button class="nav-btn" onclick="switchTab('titles', this)"><span>👑</span> Титули</button>
-        <button class="nav-btn" onclick="switchTab('exchange', this)"><span>💸</span> Обмін</button>
-    </div>
-
-    <div class="modal" id="npcModal">
-        <div class="modal-content">
-            <h2 style="color: var(--gold); font-size: 18px;">Оберіть Праву Руку</h2>
-            <p style="color: #aaa; font-size: 12px;">Вони дадуть вам пасивний бонус (10 000 DC)</p>
-            <div class="npc-grid" id="npcList"></div>
-            <button class="btn" style="margin-top: 15px; background: #333;" onclick="document.getElementById('npcModal').classList.remove('active')">Закрити</button>
+    <div id="npcSection" style="display:none;">
+        <h3 style="color:var(--gold);">Ваші Захисники (20+ рівень)</h3>
+        <div class="stat-box">
+            <div>Захисники: <span id="bodyguardCount">0</span></div>
+            <button class="btn" onclick="hireNpc('bodyguard')">Найняти (2000 DC)</button>
         </div>
     </div>
+</div>
 
-    <div class="modal" id="avatarModal">
-        <div class="modal-content">
-            <h2 style="color: var(--gold); font-size: 18px;">Змінити Аватарку</h2>
-            <input type="text" id="avatarUrlInput" class="nick-input" placeholder="Вставте URL картинки" style="margin: 15px 0; font-size:14px;">
-            <button class="btn gold" onclick="saveAvatar()">Зберегти</button>
-            <button class="btn" style="margin-top: 10px; background: #333;" onclick="document.getElementById('avatarModal').classList.remove('active')">Скасувати</button>
-        </div>
+<div id="mapTab" class="screen">
+    <div style="display:flex;gap:10px;margin-bottom:15px;">
+        <button class="btn gray" onclick="loadMap('city17')">Сіті 17</button>
+        <button class="btn gray" onclick="loadMap('dark_street')">Темна Вулиця</button>
     </div>
+    <div id="mapContainer"><div class="loading">Завантаження...</div></div>
+</div>
 
-    <div class="modal" id="endDayModal">
-        <div class="modal-content">
-            <h2 style="color: var(--gold); font-size: 20px;">🌙 День завершено!</h2>
-            <button class="btn green" onclick="endDayAction('collect')">💰 Забрати прибуток</button>
-            <button class="btn" onclick="endDayAction('pay_tax')" style="background: #333; margin-top: 10px;">📝 Сплатити податки (+XP)</button>
-        </div>
+<div id="titlesTab" class="screen">
+    <h2>👑 Епічні Клікухи</h2>
+    <div id="titlesList"><div class="loading">Завантаження...</div></div>
+</div>
+
+<div id="exchangeTab" class="screen"><h2>💸 Обмінник</h2><div class="loading">Незабаром...</div></div>
+
+<div class="bottom-nav" id="bottomNav" style="display:none;">
+    <button class="nav-btn active" onclick="switchTab('home',this)"><span>🏠</span>Головна</button>
+    <button class="nav-btn" onclick="switchTab('map',this)"><span>🗺️</span>Карта</button>
+    <button class="nav-btn" onclick="switchTab('titles',this)"><span>👑</span>Титули</button>
+    <button class="nav-btn" onclick="switchTab('exchange',this)"><span>💸</span>Обмін</button>
+</div>
+
+<div class="modal" id="npcModal"><div class="modal-content">
+    <h2 style="color:var(--gold);font-size:18px;">Оберіть Праву Руку</h2>
+    <p style="color:#aaa;font-size:12px;">Вони дадуть пасивний бонус (10 000 DC)</p>
+    <div class="npc-grid" id="npcList"></div>
+    <button class="btn gray" style="margin-top:15px;" onclick="closeModal('npcModal')">Закрити</button>
+</div></div>
+
+<div class="modal" id="avatarModal"><div class="modal-content">
+    <h2 style="color:var(--gold);font-size:18px;">Змінити Аватарку</h2>
+    <input type="text" id="avatarUrlInput" class="nick-input" placeholder="https://..." style="margin:15px 0;font-size:14px;" autocomplete="off">
+    <button class="btn gold" onclick="saveAvatar()">Зберегти</button>
+    <button class="btn gray" style="margin-top:10px;" onclick="closeModal('avatarModal')">Скасувати</button>
+</div></div>
+
+<div class="modal" id="endDayModal"><div class="modal-content">
+    <h2 style="color:var(--gold);font-size:20px;">🌙 День завершено!</h2>
+    <button class="btn green" onclick="endDayAction('collect')">💰 Забрати прибуток</button>
+    <button class="btn gray" style="margin-top:10px;" onclick="endDayAction('pay_tax')">📝 Сплатити податки (+XP)</button>
+</div></div>
+
+<div class="error-screen" id="errorScreen">
+    <div style="font-size:60px;margin-bottom:10px;">🚧</div>
+    <h2 style="color:#ff4d4d;">Помилка з'єднання</h2>
+    <div class="stat-box" style="text-align:left;margin:15px 0;">
+        <div>1. Перевірте інтернет.</div><div>2. Перейдіть на 4G.</div><div>3. Увімкніть VPN.</div>
     </div>
-
-    <div class="error-screen" id="errorScreen">
-        <div style="font-size: 60px; margin-bottom: 10px;">🚧</div>
-        <h2 style="color: #ff4d4d;">Помилка з'єднання</h2>
-        <div class="stat-box" style="text-align: left; margin: 15px 0;">
-            <div>1. Перевірте інтернет.</div><div>2. Перейдіть на 4G.</div><div>3. Увімкніть VPN.</div>
-        </div>
-        <button class="btn" onclick="location.reload()">🔄 Спробувати ще раз</button>
-        <button class="btn" style="background:#333;" onclick="toggleSupport()">✉️ Написати адміну</button>
-        <div class="support-box" id="supportBox">
-            <textarea id="supportMessage" placeholder="Опишіть проблему..."></textarea>
-            <button class="btn" onclick="sendSupport()">📨 Надіслати</button>
-        </div>
+    <button class="btn" onclick="location.reload()">🔄 Спробувати ще раз</button>
+    <button class="btn gray" style="background:#333;" onclick="toggleSupport()">✉️ Написати адміну</button>
+    <div class="support-box" id="supportBox">
+        <textarea id="supportMessage" placeholder="Опишіть проблему..."></textarea>
+        <button class="btn" onclick="sendSupport()">📨 Надіслати</button>
     </div>
+</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready(); tg.expand();
-        const API_URL = "https://neon.91-208-184-101.sslip.io"; 
-        const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_user";
-        const tgUsername = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.username : "Гравець";
-        
-        let playerData = null;
-        let timerInterval = null;
-        let newsInterval = null;
-        let chosenNick = "";
-        const defaultAvatar = "https://i.ibb.co/6H5x6QY/empty-npc.png";
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready(); tg.expand();
 
-        async function loadNews() {
-            try {
-                const res = await fetch(`${API_URL}/api/events`);
-                const data = await res.json();
-                if(data.events && data.events.length > 0) {
-                    document.getElementById('newsText').innerText = data.events.join("  ⭐  ");
-                }
-            } catch(e) {}
+const API_URL = "https://neon.91-208-184-101.sslip.io";
+const userId = tg.initDataUnsafe.user ? String(tg.initDataUnsafe.user.id) : null;
+const tgUsername = tg.initDataUnsafe.user ? (tg.initDataUnsafe.user.username || "") : "";
+const INIT_DATA = tg.initData || "";
+
+let playerData = null;
+let timerInterval = null;
+let newsInterval = null;
+let chosenNick = "";
+let selectedNpcId = null;
+const defaultAvatar = "https://i.ibb.co/6H5x6QY/empty-npc.png";
+
+// ---------- helpers ----------
+function authHeaders(extra={}) {
+    return { "Content-Type": "application/json", "X-Telegram-Init-Data": INIT_DATA, ...extra };
+}
+async function apiGet(path) {
+    const res = await fetch(`${API_URL}${path}`, { headers: { "X-Telegram-Init-Data": INIT_DATA } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
+async function apiPost(path, body) {
+    const res = await fetch(`${API_URL}${path}`, {
+        method: "POST", headers: authHeaders(), body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(()=>({detail:`HTTP ${res.status}`}));
+        throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+    return res.json();
+}
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+function showError(msg){ tg.showAlert(msg); }
+
+// ---------- news ----------
+async function loadNews(){
+    try{
+        const data = await apiGet('/api/events');
+        if(data.events && data.events.length){
+            document.getElementById('newsText').innerText = data.events.join("   ⭐   ");
         }
+    }catch(e){}
+}
 
-        async function checkNickname() {
-            const nick = document.getElementById('nickInput').value.trim();
-            const err = document.getElementById('nickError');
-            if(nick.length < 3) { err.innerText = "Мінімум 3 символи"; return; }
-            err.innerText = "Перевірка...";
-            try {
-                const res = await fetch(`${API_URL}/api/check_nickname/${nick}`);
-                const data = await res.json();
-                if(data.available) {
-                    chosenNick = nick; err.innerText = "";
-                    document.getElementById('businessSelection').style.display = 'block';
-                    document.getElementById('checkNickBtn').style.display = 'none';
-                    document.getElementById('nickInput').style.display = 'none';
-                } else { err.innerText = "Цей нік вже зайнятий"; }
-            } catch(e) { err.innerText = "Помилка сервера"; }
+// ---------- setup ----------
+async function checkNickname(){
+    const nick = document.getElementById('nickInput').value.trim();
+    const err = document.getElementById('nickError');
+    if(nick.length < 3){ err.innerText = "Мінімум 3 символи"; return; }
+    if(nick.length > 15){ err.innerText = "Максимум 15 символів"; return; }
+    if(!/^[a-zA-Zа-яА-Я0-9_]+$/.test(nick)){ err.innerText = "Лише букви, цифри, _"; return; }
+    err.innerText = "Перевірка...";
+    try{
+        const data = await apiGet(`/api/check_nickname/${encodeURIComponent(nick)}`);
+        if(data.available){
+            chosenNick = nick; err.innerText = "";
+            document.getElementById('businessSelection').style.display = 'block';
+            document.getElementById('checkNickBtn').style.display = 'none';
+            document.getElementById('nickInput').style.display = 'none';
+        } else { err.innerText = data.reason || "Цей нік вже зайнятий"; }
+    }catch(e){ err.innerText = "Помилка сервера"; }
+}
+
+async function createPlayer(type){
+    if(!chosenNick) return;
+    try{
+        const data = await apiPost('/api/create_player', {
+            user_id: userId, username: tgUsername, nickname: chosenNick, business_type: type
+        });
+        if(data.status === "success"){ await init(); }
+        else { showError("Помилка: " + (data.message || "Спробуйте інший нік")); }
+    }catch(e){ showError(e.message); }
+}
+
+// ---------- tabs ----------
+function switchTab(tabId, btn){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(tabId+'Tab').classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    if(tabId === 'map') loadMap('city17');
+    if(tabId === 'titles') loadTitles();
+}
+
+// ---------- support ----------
+function toggleSupport(){
+    const box = document.getElementById('supportBox');
+    box.style.display = box.style.display === 'block' ? 'none' : 'block';
+}
+async function sendSupport(){
+    const msg = document.getElementById('supportMessage').value.trim();
+    if(!msg) return;
+    try{
+        await apiPost('/api/support', { message: msg, user_id: userId, username: tgUsername });
+        tg.showAlert("✅ Повідомлення надіслано!");
+        document.getElementById('supportMessage').value = "";
+    }catch(e){ tg.showAlert("❌ " + e.message); }
+}
+
+// ---------- avatar ----------
+function changeAvatar(){
+    if(playerData && playerData.avatar_url){
+        document.getElementById('avatarUrlInput').value = playerData.avatar_url;
+    }
+    document.getElementById('avatarModal').classList.add('active');
+}
+async function saveAvatar(){
+    const url = document.getElementById('avatarUrlInput').value.trim();
+    if(!url){ return; }
+    if(!url.startsWith("https://") && !url.startsWith("http://")){
+        tg.showAlert("URL має починатися з https://"); return;
+    }
+    try{
+        await apiPost('/api/update_avatar', { user_id: userId, avatar_url: url });
+        closeModal('avatarModal');
+        await init();
+    }catch(e){ tg.showAlert(e.message); }
+}
+
+// ---------- NPC ----------
+async function openNpcModal(){
+    if(!playerData) return;
+    if(playerData.level < 20){ tg.showAlert("Права рука доступна з 20 рівня!"); return; }
+    if(playerData.npc.right_hand_npc_id > 0){ tg.showAlert("У вас вже є права рука!"); return; }
+    try{
+        const data = await apiGet(`/api/available_npcs/${encodeURIComponent(userId)}`);
+        if(data.status === "locked"){ tg.showAlert(data.message); return; }
+        const container = document.getElementById('npcList');
+        container.innerHTML = "";
+        data.npcs.forEach(n=>{
+            const card = document.createElement('button');
+            card.className = 'npc-card';
+            card.type = 'button';
+            const img = document.createElement('img');
+            img.src = n.image_url; img.alt = n.name; img.loading = 'lazy';
+            const name = document.createElement('span'); name.textContent = n.name;
+            const bonus = document.createElement('div');
+            bonus.style.fontSize='10px'; bonus.style.color='var(--green)'; bonus.style.marginTop='2px';
+            bonus.textContent = n.bonus_type === 'income' ? '+5% доходу' : '-5 гніву';
+            card.appendChild(img); card.appendChild(name); card.appendChild(bonus);
+            card.onclick = ()=>hireRightHand(n.id);
+            container.appendChild(card);
+        });
+        document.getElementById('npcModal').classList.add('active');
+    }catch(e){ tg.showAlert("Помилка завантаження NPC: " + e.message); }
+}
+async function hireRightHand(npcId){
+    try{
+        const data = await apiPost('/api/hire_right_hand', { user_id: userId, npc_id: npcId });
+        tg.showAlert(data.message);
+        if(data.status === "success"){ closeModal('npcModal'); await init(); }
+    }catch(e){ tg.showAlert(e.message); }
+}
+async function hireNpc(type){
+    try{
+        const data = await apiPost('/api/hire_npc', { user_id: userId, type });
+        tg.showAlert(data.message);
+        if(data.status === "success") await init();
+    }catch(e){ tg.showAlert(e.message); }
+}
+
+// ---------- init ----------
+async function init(){
+    if(!userId){
+        document.getElementById('errorScreen').classList.add('active');
+        return;
+    }
+    try{
+        const data = await apiGet(`/api/player/${encodeURIComponent(userId)}`);
+        if(data.status === "new"){
+            document.getElementById('setupScreen').classList.add('active');
+            return;
         }
+        playerData = data.player;
+        document.getElementById('setupScreen').classList.remove('active');
+        document.getElementById('homeTab').classList.add('active');
+        document.getElementById('bottomNav').style.display = 'flex';
+        document.getElementById('errorScreen').classList.remove('active');
+        updateUI();
+        startTimer();
+        loadNews();
+        if(newsInterval) clearInterval(newsInterval);
+        newsInterval = setInterval(loadNews, 30000);
+    }catch(e){
+        console.error(e);
+        document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+        document.getElementById('errorScreen').classList.add('active');
+    }
+}
 
-        function switchTab(tabId, btnElement) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(tabId + 'Tab').classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btnElement.classList.add('active');
-            if (tabId === 'map') loadMap('city17');
-            if (tabId === 'titles') loadTitles();
+function updateUI(){
+    if(!playerData) return;
+    document.getElementById('homeNickname').textContent = playerData.nickname;
+    const titleEl = document.getElementById('homeTitle');
+    if(playerData.title){
+        titleEl.style.display = 'block';
+        titleEl.textContent = `« ${playerData.title} »`;
+    } else {
+        titleEl.style.display = 'none';
+    }
+    document.getElementById('homeLevel').textContent = "Рівень " + playerData.level;
+    document.getElementById('homeBalance').textContent = Math.round(playerData.balance);
+    const xpPercent = Math.min(100, (playerData.xp / playerData.xp_needed) * 100);
+    document.getElementById('xpFill').style.width = xpPercent + "%";
+    document.getElementById('xpText').textContent = `${playerData.xp} / ${playerData.xp_needed} XP`;
+    const anger = Math.min(100, playerData.total_anger || 0);
+    document.getElementById('angerText').textContent = anger + "%";
+    document.getElementById('angerFill').style.width = anger + "%";
+    document.getElementById('playerAvatarImg').src = playerData.avatar_url || defaultAvatar;
+    if(playerData.npc && playerData.npc.right_hand_npc_id > 0){
+        document.getElementById('rightHandImg').src = playerData.npc.npc_img || defaultAvatar;
+        document.getElementById('rightHandImg').style.borderColor = 'var(--gold)';
+    } else {
+        document.getElementById('rightHandImg').src = defaultAvatar;
+        document.getElementById('rightHandImg').style.borderColor = '#555';
+    }
+    if(playerData.level >= 20){
+        document.getElementById('npcSection').style.display = 'block';
+        document.getElementById('bodyguardCount').textContent = playerData.npc.bodyguards || 0;
+    }
+    if(playerData.day_completed){
+        document.getElementById('endDayModal').classList.add('active');
+    }
+}
+
+function startTimer(){
+    if(timerInterval) clearInterval(timerInterval);
+    if(!playerData) return;
+    let serverTimeLeft = playerData.time_left;
+    const syncAt = Date.now();
+    timerInterval = setInterval(()=>{
+        const elapsed = Math.floor((Date.now() - syncAt) / 1000);
+        const left = Math.max(0, serverTimeLeft - elapsed);
+        if(left <= 0){
+            document.getElementById('gameTimeDisplay').textContent = "День завершено!";
+            document.getElementById('endDayModal').classList.add('active');
+            return;
         }
+        const h = Math.floor(left/3600);
+        const m = Math.floor((left%3600)/60);
+        const s = left%60;
+        document.getElementById('gameTimeDisplay').textContent = `${h}г ${m}хв ${s}с`;
+    }, 1000);
+}
 
-        function toggleSupport() {
-            const box = document.getElementById('supportBox');
-            box.style.display = box.style.display === 'block' ? 'none' : 'block';
+// ---------- end day ----------
+async function endDayAction(action){
+    try{
+        const data = await apiPost('/api/end_day', { user_id: userId, action });
+        if(data.status === "success"){
+            tg.showAlert(data.message);
+            closeModal('endDayModal');
+            await init();
+        } else {
+            tg.showAlert(data.message);
         }
+    }catch(e){ tg.showAlert(e.message); }
+}
 
-        async function sendSupport() {
-            const msg = document.getElementById('supportMessage').value;
-            if(!msg) return;
-            try {
-                await fetch(API_URL + '/api/support', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg, user_id: userId, username: tgUsername })
-                });
-                tg.showAlert("✅ Повідомлення надіслано!");
-            } catch(e) { tg.showAlert("❌ Помилка"); }
+// ---------- map ----------
+async function loadMap(region){
+    const container = document.getElementById('mapContainer');
+    container.innerHTML = "<div class='loading'>Завантаження...</div>";
+    try{
+        let data;
+        if(region === 'city17'){
+            data = await apiGet('/api/map/city17');
+        } else {
+            data = await apiGet(`/api/map/dark_street/${encodeURIComponent(userId)}`);
         }
-
-        function changeAvatar() {
-            if(playerData.avatar_url) {
-                document.getElementById('avatarUrlInput').value = playerData.avatar_url;
-            }
-            document.getElementById('avatarModal').classList.add('active');
+        if(data.status === "locked"){
+            container.innerHTML = `<div style="text-align:center;padding:30px;color:#ff4d4d;font-weight:bold;">🔒 ${data.message}</div>`;
+            return;
         }
-
-        async function saveAvatar() {
-            const url = document.getElementById('avatarUrlInput').value.trim();
-            if(!url) return;
-            try {
-                const res = await fetch(`${API_URL}/api/update_avatar`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, avatar_url: url })
-                });
-                const data = await res.json();
-                if(data.status === "success") {
-                    document.getElementById('avatarModal').classList.remove('active');
-                    init();
-                }
-            } catch(e) { tg.showAlert("Помилка"); }
+        container.innerHTML = "";
+        (data.businesses || []).forEach(biz=>{
+            const div = document.createElement('div');
+            div.className = 'stat-box';
+            div.style.textAlign = 'left';
+            div.innerHTML = `<div style="font-weight:bold;"></div><div style="font-size:12px;color:var(--green);"></div>`;
+            div.children[0].textContent = biz.name;
+            div.children[1].textContent = `Дохід: ${Math.round(biz.income)} DC | Податок: ${biz.tax_percent}%`;
+            container.appendChild(div);
+        });
+        if(data.players && data.players.length){
+            const h = document.createElement('h3');
+            h.style.cssText = 'text-align:center;color:var(--accent);margin-top:20px;';
+            h.textContent = 'Гравці поруч';
+            container.appendChild(h);
+            data.players.forEach(p=>{
+                if(String(p.user_id) === String(userId)) return;
+                const row = document.createElement('div');
+                row.className = 'stat-box';
+                row.style.cssText = 'text-align:left;display:flex;justify-content:space-between;align-items:center;';
+                const info = document.createElement('div');
+                const n = document.createElement('div'); n.style.fontWeight='bold'; n.textContent = p.nickname;
+                const lv = document.createElement('div'); lv.style.cssText='font-size:12px;color:#aaa;'; lv.textContent = `Рівень: ${p.level}`;
+                info.appendChild(n); info.appendChild(lv);
+                const btn = document.createElement('button');
+                btn.className = 'btn'; btn.style.cssText='width:100px;background:#ff0055;margin:0;';
+                btn.textContent = 'Напасти';
+                btn.onclick = ()=>confirmAttack(p.user_id);
+                row.appendChild(info); row.appendChild(btn);
+                container.appendChild(row);
+            });
         }
-
-        async function openNpcModal() {
-            if(playerData.level < 20) {
-                tg.showAlert("Права рука доступна з 20 рівня!");
-                return;
-            }
-            if(playerData.npc.right_hand_npc_id > 0) {
-                tg.showAlert("У вас вже є права рука!");
-                return;
-            }
-            
-            try {
-                const res = await fetch(`${API_URL}/api/available_npcs/${userId}`);
-                const data = await res.json();
-                
-                if(data.status === "locked") {
-                    tg.showAlert(data.message);
-                    return;
-                }
-                
-                const container = document.getElementById('npcList');
-                container.innerHTML = "";
-                data.npcs.forEach(n => {
-                    container.innerHTML += `
-                        <div class="npc-card" onclick="hireRightHand(${n.id})">
-                            <img src="${n.image_url}" alt="${n.name}">
-                            <span>${n.name}</span>
-                            <div style="font-size:10px; color:var(--green); margin-top:2px;">+5% ${n.bonus_type === 'income' ? 'доходу' : 'зниження гніву'}</div>
-                        </div>
-                    `;
-                });
-                document.getElementById('npcModal').classList.add('active');
-            } catch(e) { tg.showAlert("Помилка завантаження NPC"); }
+        if(!container.children.length){
+            container.innerHTML = "<div class='loading'>Порожньо</div>";
         }
+    }catch(e){
+        container.innerHTML = `<div class='loading'>Помилка: ${e.message}</div>`;
+    }
+}
 
-        async function hireRightHand(npcId) {
-            try {
-                const res = await fetch(`${API_URL}/api/hire_right_hand`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, npc_id: npcId })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") {
-                    document.getElementById('npcModal').classList.remove('active');
-                    init();
-                }
-            } catch(e) { tg.showAlert("Помилка"); }
-        }
+function confirmAttack(targetId){
+    tg.showConfirm("Напасти на цього гравця? Ліміт: 1 атака / 30 хв.", async (ok)=>{
+        if(!ok) return;
+        try{
+            const data = await apiPost('/api/attack', { attacker_id: userId, target_id: targetId });
+            tg.showAlert(data.message || (data.status === "success" ? "Успіх!" : "Невдача"));
+            if(data.status === "success") await init();
+        }catch(e){ tg.showAlert("Помилка: " + e.message); }
+    });
+}
 
-        async function init() {
-            try {
-                const res = await fetch(`${API_URL}/api/player/${userId}`);
-                const data = await res.json();
-                if (data.status === "new") {
-                    document.getElementById('setupScreen').classList.add('active');
-                } else {
-                    playerData = data.player;
-                    document.getElementById('setupScreen').classList.remove('active');
-                    document.getElementById('homeTab').classList.add('active');
-                    document.getElementById('bottomNav').style.display = 'flex';
-                    updateUI();
-                    startTimer();
-                    loadNews();
-                    if(newsInterval) clearInterval(newsInterval);
-                    newsInterval = setInterval(loadNews, 30000);
-                }
-            } catch (e) { 
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById('errorScreen').classList.add('active');
-            }
-        }
-
-        function updateUI() {
-            if(!playerData) return;
-            document.getElementById('homeNickname').innerText = playerData.nickname;
-            
-            if (playerData.title) {
-                document.getElementById('homeTitle').style.display = 'block';
-                document.getElementById('homeTitle').innerText = `« ${playerData.title} »`;
-            }
-            
-            document.getElementById('homeLevel').innerText = "Рівень " + playerData.level;
-            document.getElementById('homeBalance').innerText = playerData.balance.toFixed(0);
-            let xpPercent = (playerData.xp / playerData.xp_needed) * 100;
-            document.getElementById('xpFill').style.width = xpPercent + "%";
-            document.getElementById('xpText').innerText = `${playerData.xp} / ${playerData.xp_needed} XP`;
-            let anger = Math.min(100, playerData.total_anger);
-            document.getElementById('angerText').innerText = anger + "%";
-            document.getElementById('angerFill').style.width = anger + "%";
-
-            document.getElementById('playerAvatarImg').src = playerData.avatar_url || defaultAvatar;
-            
-            if (playerData.npc.right_hand_npc_id > 0) {
-                document.getElementById('rightHandImg').src = playerData.npc.npc_img;
-                document.getElementById('rightHandImg').style.borderColor = 'var(--gold)';
+// ---------- titles ----------
+async function loadTitles(){
+    const container = document.getElementById('titlesList');
+    container.innerHTML = "<div class='loading'>Завантаження...</div>";
+    try{
+        const data = await apiGet('/api/titles');
+        container.innerHTML = "";
+        (data.titles || []).forEach(t=>{
+            const box = document.createElement('div');
+            box.className = 'stat-box';
+            box.style.textAlign = 'left';
+            const name = document.createElement('div');
+            name.style.cssText = 'color:var(--gold);font-weight:bold;font-size:16px;';
+            name.textContent = t.name;
+            const desc = document.createElement('div');
+            desc.style.cssText = 'font-size:12px;color:#aaa;margin:5px 0;';
+            desc.textContent = t.desc;
+            const req = document.createElement('div');
+            req.style.cssText = 'font-size:11px;color:#666;margin-bottom:10px;';
+            req.textContent = `Потрібен рівень: ${t.req_level}`;
+            box.appendChild(name); box.appendChild(desc); box.appendChild(req);
+            if(t.owner){
+                const own = document.createElement('div');
+                own.style.cssText = 'color:var(--gold);font-weight:bold;';
+                own.textContent = `Власник: ${t.owner}`;
+                box.appendChild(own);
             } else {
-                document.getElementById('rightHandImg').src = defaultAvatar;
-                document.getElementById('rightHandImg').style.borderColor = '#555';
+                const btn = document.createElement('button');
+                btn.className = 'btn gold';
+                btn.textContent = 'Спробувати отримати';
+                btn.onclick = ()=>claimTitle(t.id);
+                box.appendChild(btn);
             }
+            container.appendChild(box);
+        });
+    }catch(e){ container.innerHTML = `<div class='loading'>Помилка: ${e.message}</div>`; }
+}
 
-            if (playerData.level >= 20) {
-                document.getElementById('npcSection').style.display = 'block';
-                document.getElementById('bodyguardCount').innerText = playerData.npc.bodyguards;
-            }
+async function claimTitle(titleId){
+    try{
+        const data = await apiPost('/api/claim_title', { user_id: userId, title_id: titleId });
+        tg.showAlert(data.message);
+        if(data.status === "success"){ await init(); loadTitles(); }
+    }catch(e){ tg.showAlert(e.message); }
+}
 
-            if (playerData.day_completed) document.getElementById('endDayModal').classList.add('active');
-        }
-
-        function startTimer() {
-            if(timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if(!playerData) return;
-                let left = playerData.time_left;
-                if (left <= 0) {
-                    document.getElementById('gameTimeDisplay').innerText = "День завершено!";
-                    document.getElementById('endDayModal').classList.add('active');
-                    return;
-                }
-                let h = Math.floor(left / 3600);
-                let m = Math.floor((left % 3600) / 60);
-                let s = left % 60;
-                document.getElementById('gameTimeDisplay').innerText = `${h}г ${m}хв ${s}с`;
-                playerData.time_left -= 1;
-            }, 1000);
-        }
-
-        // ВИПРАВЛЕНО: Тепер створення гравця працює коректно
-        async function createPlayer(type) {
-            try {
-                const res = await fetch(`${API_URL}/api/create_player`, {
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        user_id: userId, 
-                        username: tgUsername, 
-                        nickname: chosenNick, 
-                        business_type: type 
-                    })
-                });
-                const data = await res.json();
-                if (data.status === "success") { 
-                    init(); 
-                } else { 
-                    tg.showAlert("Помилка: " + (data.message || "Спробуйте інший нік")); 
-                }
-            } catch (e) { 
-                tg.showAlert("Помилка з'єднання з сервером"); 
-            }
-        }
-
-        async function endDayAction(action) {
-            try {
-                const res = await fetch(`${API_URL}/api/end_day`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, action: action })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if (data.status === "success") {
-                    document.getElementById('endDayModal').classList.remove('active');
-                    init();
-                }
-            } catch (e) { tg.showAlert("Помилка"); }
-        }
-
-        async function loadMap(region) {
-            const container = document.getElementById('mapContainer');
-            container.innerHTML = "<div style='text-align:center;'>Завантаження...</div>";
-            try {
-                const url = region === 'city17' ? `${API_URL}/api/map/city17` : `${API_URL}/api/map/dark_street/${userId}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                
-                if (data.status === "locked") {
-                    container.innerHTML = `<div style="text-align:center; padding: 30px; color: #ff4d4d; font-weight: bold;">🔒 ${data.message}</div>`;
-                    return;
-                }
-                
-                container.innerHTML = "";
-                if (data.businesses) {
-                    data.businesses.forEach(biz => {
-                        container.innerHTML += `
-                            <div class="stat-box" style="text-align:left; padding:15px; margin-bottom:10px;">
-                                <div style="font-weight:bold;">${biz.name}</div>
-                                <div style="font-size: 12px; color: var(--green);">Дохід: ${biz.income} DC</div>
-                            </div>
-                        `;
-                    });
-                }
-                if (data.players && data.players.length > 0) {
-                    container.innerHTML += "<h3 style='text-align:center; color:var(--accent); margin-top:20px;'>Гравці поруч</h3>";
-                    data.players.forEach(p => {
-                        container.innerHTML += `
-                            <div class="stat-box" style="text-align:left; padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <div style="font-weight:bold;">${p.nickname}</div>
-                                    <div style="font-size: 12px; color: #aaa;">Рівень: ${p.level}</div>
-                                </div>
-                                <button class="btn" style="width:100px; background:#ff0055;" onclick="attackPlayer('${p.user_id}')">Напасти</button>
-                            </div>
-                        `;
-                    });
-                }
-            } catch (e) { container.innerHTML = "Помилка завантаження"; }
-        }
-
-        async function loadTitles() {
-            const container = document.getElementById('titlesList');
-            container.innerHTML = "Завантаження...";
-            try {
-                const res = await fetch(`${API_URL}/api/titles`);
-                const data = await res.json();
-                container.innerHTML = "";
-                
-                data.titles.forEach(t => {
-                    let btnHtml = t.owner 
-                        ? `<div style="color: var(--gold); font-weight:bold;">Власник: ${t.owner}</div>`
-                        : `<button class="btn gold" onclick="claimTitle('${t.id}')">Спробувати отримати</button>`;
-                        
-                    container.innerHTML += `
-                        <div class="stat-box" style="text-align:left; margin-bottom:10px;">
-                            <div style="color: var(--gold); font-weight: bold; font-size:16px;">${t.name}</div>
-                            <div style="font-size: 12px; color: #aaa; margin: 5px 0;">${t.desc}</div>
-                            <div style="font-size: 11px; color: #666; margin-bottom:10px;">Потрібен рівень: ${t.req_level}</div>
-                            ${btnHtml}
-                        </div>
-                    `;
-                });
-            } catch(e) { container.innerHTML = "Помилка"; }
-        }
-
-        async function claimTitle(titleId) {
-            try {
-                const res = await fetch(`${API_URL}/api/claim_title`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, title_id: titleId })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") { init(); loadTitles(); }
-            } catch(e) { tg.showAlert("Помилка"); }
-        }
-
-        async function hireNpc(type) {
-            try {
-                const res = await fetch(`${API_URL}/api/hire_npc`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, type: type })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") init();
-            } catch(e) { tg.showAlert("Помилка"); }
-        }
-
-        async function attackPlayer(targetId) {
-            if(!confirm("Ви впевнені, що хочете напасти? Ліміт: 2 атаки на годину.")) return;
-            try {
-                const res = await fetch(`${API_URL}/api/attack`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ attacker_id: userId, target_id: targetId })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") init();
-            } catch(e) { tg.showAlert("Помилка атаки"); }
-        }
-
-        init();
-    </script>
+// ---------- boot ----------
+if(!userId){
+    document.getElementById('errorScreen').classList.add('active');
+} else {
+    init();
+}
+</script>
 </body>
 </html>
