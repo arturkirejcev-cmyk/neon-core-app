@@ -6,160 +6,146 @@
     <title>Shadow Syndicate</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg: #0a0a0a; --panel: #1a1a1a; --accent: #ff0055; --text: #ffffff; --gold: #ffd700; --green: #00ff88; --cyan: #00e5ff; }
+        :root { --bg: #0a0a0a; --panel: #1a1a1a; --accent: #ff0055; --text: #ffffff; --gold: #ffd700; --green: #00ff88; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         /* Верхня панель */
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #111; border-bottom: 1px solid #333; z-index: 50; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #111; border-bottom: 1px solid #333; }
         .clock-box { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #aaa; }
-        
-        /* Бігучий рядок новин */
-        .news-ticker { background: #220000; border-bottom: 1px solid #550000; padding: 5px 0; white-space: nowrap; overflow: hidden; box-sizing: border-box; }
-        .news-ticker span { display: inline-block; padding-left: 100%; animation: marquee 25s linear infinite; color: var(--gold); font-size: 12px; font-weight: bold; }
-        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
+        .calendar-btn { background: #222; border: none; color: var(--gold); padding: 5px 10px; border-radius: 8px; cursor: pointer; }
 
-        .screen { display: none; flex-direction: column; padding: 15px; height: calc(100% - 85px); box-sizing: border-box; overflow-y: auto; padding-bottom: 80px; }
+        .screen { display: none; flex-direction: column; padding: 15px; height: calc(100% - 50px); box-sizing: border-box; overflow-y: auto; padding-bottom: 80px; }
         .screen.active { display: flex; }
         
         h1, h2 { text-align: center; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
         h1 { color: var(--accent); text-shadow: 0 0 10px var(--accent); }
 
-        .profile-header { background: linear-gradient(180deg, #2a0a15 0%, var(--panel) 100%); border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #440011; margin-bottom: 15px; }
-        .profile-nick { font-size: 22px; font-weight: 900; color: var(--cyan); letter-spacing: 1px; }
-        .profile-title { font-size: 14px; font-weight: bold; color: var(--gold); text-shadow: 0 0 8px var(--gold); margin-top: 5px; letter-spacing: 1px; }
-        .profile-level { display: inline-block; background: var(--gold); color: #000; padding: 2px 8px; border-radius: 10px; font-weight: bold; font-size: 12px; margin-top: 5px; }
-        .xp-bar-container { background: #333; height: 8px; border-radius: 4px; margin-top: 10px; overflow: hidden; }
-        .xp-bar-fill { height: 100%; background: var(--cyan); width: 0%; transition: width 0.3s; }
-        .xp-text { font-size: 11px; color: #aaa; margin-top: 5px; text-align: right; }
-        .profile-balance { font-size: 28px; color: var(--gold); font-weight: 900; margin: 15px 0; }
-
-        .setup-screen { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 300; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-        .setup-screen.active { display: flex; }
-        .nick-input { background: #111; border: 1px solid #333; color: white; padding: 15px; border-radius: 8px; font-size: 16px; width: 100%; max-width: 250px; margin: 15px 0; text-align: center; }
-        .error-msg { color: #ff4d4d; font-size: 12px; margin-bottom: 10px; height: 15px; }
-
+        /* Панель гніву */
         .anger-box { background: var(--panel); border-radius: 10px; padding: 10px; margin-bottom: 15px; }
         .anger-bar { height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 5px; }
-        .anger-fill { height: 100%; background: linear-gradient(90deg, #ffd700, #ff0055); width: 0%; }
-        
-        .stat-box { background: var(--panel); padding: 15px; border-radius: 10px; border: 1px solid #333; text-align: center; margin-bottom: 10px;}
+        .anger-fill { height: 100%; background: linear-gradient(90deg, #ffd700, #ff0055); width: 0%; transition: width 0.5s; }
+
+        /* Вибір бізнесу (як було) */
+        .business-card { background: var(--panel); border: 1px solid #333; border-radius: 15px; padding: 15px; margin-bottom: 15px; cursor: pointer; }
+        .business-header { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+        .business-img { font-size: 40px; background: #222; padding: 10px; border-radius: 12px; }
+        .business-title h3 { margin: 0; color: var(--gold); }
+        .plus { color: var(--green); font-size: 13px; }
+        .minus { color: #ff4d4d; font-size: 13px; }
+
+        /* Головна */
+        .profile-header { background: linear-gradient(180deg, #2a0a15 0%, var(--panel) 100%); border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #440011; margin-bottom: 15px; }
+        .profile-balance { font-size: 32px; color: var(--gold); font-weight: 900; margin: 10px 0; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-box { background: var(--panel); padding: 15px; border-radius: 10px; border: 1px solid #333; text-align: center; }
         .stat-val { font-size: 18px; color: var(--accent); font-weight: bold; margin-top: 5px;}
 
+        /* Карта */
+        .map-container { display: grid; gap: 10px; }
+        .map-item { background: var(--panel); border: 1px solid #333; border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .biz-name { font-weight: bold; font-size: 15px; margin-bottom: 4px;}
+
+        /* Кнопки */
         .btn { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; margin-top: 5px;}
         .btn.green { background: var(--green); color: #000; }
-        .btn.gold { background: var(--gold); color: #000; }
         .btn:active { opacity: 0.8; }
 
+        /* Нижнє меню */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #111; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; z-index: 10; }
         .nav-btn { background: none; border: none; color: #777; font-size: 10px; display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 25%; }
         .nav-btn.active { color: var(--accent); }
         .nav-btn span { font-size: 22px; margin-bottom: 3px; }
 
+        /* Модальні вікна */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
         .modal.active { display: flex; }
         .modal-content { background: var(--panel); border: 1px solid #444; border-radius: 15px; padding: 20px; width: 100%; max-width: 300px; text-align: center; }
-
-        .error-screen { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; background: var(--bg); position: fixed; inset: 0; z-index: 100; }
-        .error-screen.active { display: flex; }
-        .support-box { display: none; width: 100%; margin-top: 10px; }
-        .support-box textarea { width: 100%; height: 80px; background: #111; border: 1px solid #333; color: white; border-radius: 8px; padding: 10px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
+    <!-- ВЕРХНЯ ПАНЕЛЬ -->
     <div class="top-header">
-        <div class="clock-box"><span>⏱</span><span id="gameTimeDisplay">Завантаження...</span></div>
-    </div>
-    
-    <!-- СТРІЧКА НОВИН -->
-    <div class="news-ticker">
-        <span id="newsText">Завантаження новин...</span>
-    </div>
-
-    <div id="setupScreen" class="setup-screen">
-        <h1>Хто ти?</h1>
-        <p style="color: #aaa; font-size: 14px;">Придумай свій псевдонім.</p>
-        <input type="text" id="nickInput" class="nick-input" placeholder="Твій псевдонім" maxlength="15">
-        <div id="nickError" class="error-msg"></div>
-        <div id="businessSelection" style="display: none; width: 100%; max-width: 300px;">
-            <p style="color: var(--gold); font-weight: bold; margin-bottom: 15px;">Обери перший бізнес:</p>
-            <div class="stat-box" onclick="createPlayer('casino')" style="cursor:pointer;"><h3>💎 Казино</h3></div>
-            <div class="stat-box" onclick="createPlayer('factory')" style="cursor:pointer;"><h3>🏭 Завод</h3></div>
-            <div class="stat-box" onclick="createPlayer('club')" style="cursor:pointer;"><h3>🎭 Клуб</h3></div>
+        <div class="clock-box">
+            <span>⏱</span>
+            <span id="gameTimeDisplay">Завантаження...</span>
         </div>
-        <button class="btn" id="checkNickBtn" onclick="checkNickname()" style="max-width: 250px;">Перевірити нік</button>
+        <button class="calendar-btn" onclick="openCalendar()">📅 Календар</button>
     </div>
 
+    <!-- ЕКРАН ВИБОРУ -->
+    <div id="selectScreen" class="screen active">
+        <h1>Твій Шлях</h1>
+        <div class="business-card" onclick="createPlayer('casino')">
+            <div class="business-header"><div class="business-img">💎</div><div class="business-title"><h3>Казино</h3></div></div>
+            <div class="plus">+ Найвищий дохід</div><div class="minus">- Швидкий гнів NPC</div>
+        </div>
+        <div class="business-card" onclick="createPlayer('factory')">
+            <div class="business-header"><div class="business-img">🏭</div><div class="business-title"><h3>Завод</h3></div></div>
+            <div class="plus">+ Стабільність</div><div class="minus">- Повільний розвиток</div>
+        </div>
+        <div class="business-card" onclick="createPlayer('club')">
+            <div class="business-header"><div class="business-img">🎭</div><div class="business-title"><h3>Клуб</h3></div></div>
+            <div class="plus">+ Баланс</div><div class="minus">- Ризик PvP</div>
+        </div>
+    </div>
+
+    <!-- ГОЛОВНА -->
     <div id="homeTab" class="screen">
         <div class="profile-header">
-            <div class="profile-nick" id="homeNickname">-</div>
-            <div class="profile-title" id="homeTitle" style="display:none;"></div>
-            <div class="profile-level" id="homeLevel">Рівень 1</div>
+            <div style="font-size: 40px;">🕶️</div>
+            <div style="font-weight: bold; margin-top: 5px;" id="homeUsername">Гравець</div>
             <div class="profile-balance"><span id="homeBalance">0</span> <span style="font-size: 16px;">DC</span></div>
-            <div class="xp-bar-container"><div class="xp-bar-fill" id="xpFill"></div></div>
-            <div class="xp-text"><span id="xpText">0 / 500 XP</span></div>
         </div>
+
+        <!-- ГНІВ -->
         <div class="anger-box">
             <div style="display: flex; justify-content: space-between; font-size: 12px;">
-                <span>Гнів Синдикату</span><span id="angerText" style="color: var(--accent); font-weight: bold;">0%</span>
+                <span>Гнів Синдикату</span>
+                <span id="angerText" style="color: var(--accent); font-weight: bold;">0%</span>
             </div>
             <div class="anger-bar"><div class="anger-fill" id="angerFill"></div></div>
         </div>
         
-        <div id="npcSection" style="display: none;">
-            <h3 style="color: var(--gold);">Ваші NPC (20+ рівень)</h3>
-            <div class="stat-box">
-                <div>Права рука: <span id="rightHandStatus">Немає</span></div>
-                <button class="btn gold" onclick="hireNpc('right_hand')">Найняти (10,000 DC)</button>
-            </div>
-            <div class="stat-box">
-                <div>Захисники: <span id="bodyguardCount">0</span></div>
-                <button class="btn" onclick="hireNpc('bodyguard')">Найняти (2000 DC)</button>
-            </div>
+        <div class="stats-grid">
+            <div class="stat-box"><div style="font-size: 12px; color: #aaa;">Головний Бізнес</div><div class="stat-val" id="homeBizType">-</div></div>
+            <div class="stat-box"><div style="font-size: 12px; color: #aaa;">Під контролем (NPC)</div><div class="stat-val">0</div></div>
         </div>
     </div>
 
+    <!-- КАРТА -->
     <div id="mapTab" class="screen">
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button class="btn" style="background: #333;" onclick="loadMap('city17')">Сіті 17</button>
-            <button class="btn" style="background: #440011;" onclick="loadMap('dark_street')">Темна Вулиця</button>
-        </div>
+        <h2>📍 Сіті 17</h2>
         <div class="map-container" id="mapContainer"></div>
     </div>
-    
-    <div id="titlesTab" class="screen">
-        <h2>👑 Епічні Клікухи</h2>
-        <div id="titlesList"></div>
+
+    <!-- БІЗНЕС (ЗАГЛУШКА) -->
+    <div id="businessTab" class="screen">
+        <h2>💼 Мій Бізнес</h2>
+        <div class="stat-box" style="padding: 20px;">Тут будуть покращення</div>
     </div>
 
-    <div id="exchangeTab" class="screen"><h2>💸 Обмінник</h2></div>
+    <!-- ОБМІННИК (ЗАГЛУШКА) -->
+    <div id="exchangeTab" class="screen">
+        <h2>💸 Обмінник</h2>
+        <div class="stat-box" style="padding: 20px;">Тут буде обмін на GRAM</div>
+    </div>
 
+    <!-- НИЖНЄ МЕНЮ -->
     <div class="bottom-nav" id="bottomNav" style="display: none;">
         <button class="nav-btn active" onclick="switchTab('home', this)"><span>🏠</span> Головна</button>
         <button class="nav-btn" onclick="switchTab('map', this)"><span>🗺️</span> Карта</button>
-        <button class="nav-btn" onclick="switchTab('titles', this)"><span>👑</span> Титули</button>
+        <button class="nav-btn" onclick="switchTab('business', this)"><span>💼</span> Бізнес</button>
         <button class="nav-btn" onclick="switchTab('exchange', this)"><span>💸</span> Обмін</button>
     </div>
 
+    <!-- МОДАЛЬНЕ ВІКНО ЗАКІНЧЕННЯ ДНЯ -->
     <div class="modal" id="endDayModal">
         <div class="modal-content">
             <h2 style="color: var(--gold); font-size: 20px;">🌙 День завершено!</h2>
+            <p style="color: #aaa; font-size: 13px; margin-bottom: 20px;">Бізнеси зупинили роботу. Заберіть прибуток або сплатіть податки, щоб почати новий день.</p>
             <button class="btn green" onclick="endDayAction('collect')">💰 Забрати прибуток</button>
-            <button class="btn" onclick="endDayAction('pay_tax')" style="background: #333; margin-top: 10px;">📝 Сплатити податки (+XP)</button>
-        </div>
-    </div>
-
-    <div class="error-screen" id="errorScreen">
-        <div style="font-size: 60px; margin-bottom: 10px;">🚧</div>
-        <h2 style="color: #ff4d4d;">Помилка з'єднання</h2>
-        <div class="stat-box" style="text-align: left; margin: 15px 0;">
-            <div>1. Перевірте інтернет.</div><div>2. Перейдіть на 4G.</div><div>3. Увімкніть VPN.</div>
-        </div>
-        <button class="btn" onclick="location.reload()">🔄 Спробувати ще раз</button>
-        <button class="btn" style="background:#333;" onclick="toggleSupport()">✉️ Написати адміну</button>
-        <div class="support-box" id="supportBox">
-            <textarea id="supportMessage" placeholder="Опишіть проблему..."></textarea>
-            <button class="btn" onclick="sendSupport()">📨 Надіслати</button>
+            <button class="btn" onclick="endDayAction('pay_tax')" style="background: #333; margin-top: 10px;">📝 Сплатити податки</button>
         </div>
     </div>
 
@@ -168,131 +154,74 @@
         tg.ready(); tg.expand();
         const API_URL = "https://neon.91-208-184-101.sslip.io"; 
         const userId = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_user";
-        const tgUsername = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.username : "Гравець";
-        
         let playerData = null;
         let timerInterval = null;
-        let newsInterval = null;
-        let chosenNick = "";
-
-        // Завантаження новин
-        async function loadNews() {
-            try {
-                const res = await fetch(`${API_URL}/api/events`);
-                const data = await res.json();
-                if(data.events && data.events.length > 0) {
-                    document.getElementById('newsText').innerText = data.events.join("  ⭐  ");
-                }
-            } catch(e) {}
-        }
-
-        async function checkNickname() {
-            const nick = document.getElementById('nickInput').value.trim();
-            const err = document.getElementById('nickError');
-            if(nick.length < 3) { err.innerText = "Мінімум 3 символи"; return; }
-            err.innerText = "Перевірка...";
-            try {
-                const res = await fetch(`${API_URL}/api/check_nickname/${nick}`);
-                const data = await res.json();
-                if(data.available) {
-                    chosenNick = nick; err.innerText = "";
-                    document.getElementById('businessSelection').style.display = 'block';
-                    document.getElementById('checkNickBtn').style.display = 'none';
-                    document.getElementById('nickInput').style.display = 'none';
-                } else { err.innerText = "Цей нік вже зайнятий"; }
-            } catch(e) { err.innerText = "Помилка сервера"; }
-        }
 
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(tabId + 'Tab').classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
-            if (tabId === 'map') loadMap('city17');
-            if (tabId === 'titles') loadTitles();
+            if (tabId === 'map') loadMap();
         }
 
-        function toggleSupport() {
-            const box = document.getElementById('supportBox');
-            box.style.display = box.style.display === 'block' ? 'none' : 'block';
-        }
-
-        async function sendSupport() {
-            const msg = document.getElementById('supportMessage').value;
-            if(!msg) return;
-            try {
-                await fetch(API_URL + '/api/support', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: msg, user_id: userId, username: tgUsername })
-                });
-                tg.showAlert("✅ Повідомлення надіслано!");
-            } catch(e) { tg.showAlert("❌ Помилка"); }
+        function openCalendar() {
+            tg.showAlert("📅 Календар податків:\n\nПодатки сплачуються кожні 7 годин (1 ігровий день).\n\nНе забудьте сплатити їх вчасно, щоб уникнути бунту!");
         }
 
         async function init() {
             try {
                 const res = await fetch(`${API_URL}/api/player/${userId}`);
                 const data = await res.json();
+                
                 if (data.status === "new") {
-                    document.getElementById('setupScreen').classList.add('active');
+                    document.getElementById('selectScreen').classList.add('active');
                 } else {
                     playerData = data.player;
-                    document.getElementById('setupScreen').classList.remove('active');
+                    document.getElementById('selectScreen').classList.remove('active');
                     document.getElementById('homeTab').classList.add('active');
                     document.getElementById('bottomNav').style.display = 'flex';
                     updateUI();
                     startTimer();
-                    loadNews();
-                    if(newsInterval) clearInterval(newsInterval);
-                    newsInterval = setInterval(loadNews, 30000); // Оновлення новин кожні 30 сек
                 }
-            } catch (e) { 
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById('errorScreen').classList.add('active');
-            }
+            } catch (e) { tg.showAlert("Помилка сервера"); }
         }
 
         function updateUI() {
             if(!playerData) return;
-            document.getElementById('homeNickname').innerText = playerData.nickname;
             
-            if (playerData.title) {
-                document.getElementById('homeTitle').style.display = 'block';
-                document.getElementById('homeTitle').innerText = `« ${playerData.title} »`;
-            }
-            
-            document.getElementById('homeLevel').innerText = "Рівень " + playerData.level;
+            document.getElementById('homeUsername').innerText = playerData.username || "Гравець";
             document.getElementById('homeBalance').innerText = playerData.balance.toFixed(0);
-            let xpPercent = (playerData.xp / playerData.xp_needed) * 100;
-            document.getElementById('xpFill').style.width = xpPercent + "%";
-            document.getElementById('xpText').innerText = `${playerData.xp} / ${playerData.xp_needed} XP`;
+            document.getElementById('homeBizType').innerText = playerData.business_type.toUpperCase();
+            
+            // Оновлення гніву
             let anger = Math.min(100, playerData.total_anger);
             document.getElementById('angerText').innerText = anger + "%";
             document.getElementById('angerFill').style.width = anger + "%";
 
-            if (playerData.level >= 20) {
-                document.getElementById('npcSection').style.display = 'block';
-                document.getElementById('rightHandStatus').innerText = playerData.npc.right_hand ? "✅ Найнято" : "❌ Немає";
-                document.getElementById('bodyguardCount').innerText = playerData.npc.bodyguards;
+            // Перевірка на кінець дня
+            if (playerData.day_completed) {
+                document.getElementById('endDayModal').classList.add('active');
             }
-
-            if (playerData.day_completed) document.getElementById('endDayModal').classList.add('active');
         }
 
         function startTimer() {
             if(timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 if(!playerData) return;
+                
                 let left = playerData.time_left;
                 if (left <= 0) {
                     document.getElementById('gameTimeDisplay').innerText = "День завершено!";
                     document.getElementById('endDayModal').classList.add('active');
                     return;
                 }
+                
                 let h = Math.floor(left / 3600);
                 let m = Math.floor((left % 3600) / 60);
                 let s = left % 60;
                 document.getElementById('gameTimeDisplay').innerText = `${h}г ${m}хв ${s}с`;
+                
                 playerData.time_left -= 1;
             }, 1000);
         }
@@ -300,8 +229,9 @@
         async function createPlayer(type) {
             try {
                 const res = await fetch(`${API_URL}/api/create_player`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, username: tgUsername, nickname: chosenNick, business_type: type })
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, username: tg.initDataUnsafe.user?.username || "Гравець", business_type: type })
                 });
                 const data = await res.json();
                 if (data.status === "success") { init(); }
@@ -312,119 +242,39 @@
         async function endDayAction(action) {
             try {
                 const res = await fetch(`${API_URL}/api/end_day`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, action: action })
                 });
                 const data = await res.json();
                 tg.showAlert(data.message);
                 if (data.status === "success") {
                     document.getElementById('endDayModal').classList.remove('active');
-                    init();
+                    init(); // Оновлюємо все
                 }
             } catch (e) { tg.showAlert("Помилка"); }
         }
 
-        async function loadMap(region) {
-            const container = document.getElementById('mapContainer');
-            container.innerHTML = "<div style='text-align:center;'>Завантаження...</div>";
+        async function loadMap() {
             try {
-                const url = region === 'city17' ? `${API_URL}/api/map/city17` : `${API_URL}/api/map/dark_street/${userId}`;
-                const res = await fetch(url);
+                const res = await fetch(`${API_URL}/api/map/city17`);
                 const data = await res.json();
-                
-                if (data.status === "locked") {
-                    container.innerHTML = `<div style="text-align:center; padding: 30px; color: #ff4d4d; font-weight: bold;">🔒 ${data.message}</div>`;
-                    return;
-                }
-                
+                const container = document.getElementById('mapContainer');
                 container.innerHTML = "";
-                if (data.businesses) {
-                    data.businesses.forEach(biz => {
-                        container.innerHTML += `
-                            <div class="stat-box" style="text-align:left; padding:15px; margin-bottom:10px;">
-                                <div style="font-weight:bold;">${biz.name}</div>
+                
+                data.businesses.forEach(biz => {
+                    let html = `
+                        <div class="map-item">
+                            <div class="biz-info">
+                                <div class="biz-name">${biz.name}</div>
                                 <div style="font-size: 12px; color: var(--green);">Дохід: ${biz.income} DC</div>
+                                <div style="font-size: 12px; color: #ff4d4d;">Податок: ${biz.tax_percent}%</div>
                             </div>
-                        `;
-                    });
-                }
-                if (data.players && data.players.length > 0) {
-                    container.innerHTML += "<h3 style='text-align:center; color:var(--accent); margin-top:20px;'>Гравці поруч</h3>";
-                    data.players.forEach(p => {
-                        container.innerHTML += `
-                            <div class="stat-box" style="text-align:left; padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <div style="font-weight:bold;">${p.nickname}</div>
-                                    <div style="font-size: 12px; color: #aaa;">Рівень: ${p.level}</div>
-                                </div>
-                                <button class="btn" style="width:100px; background:#ff0055;" onclick="attackPlayer('${p.user_id}')">Напасти</button>
-                            </div>
-                        `;
-                    });
-                }
-            } catch (e) { container.innerHTML = "Помилка завантаження"; }
-        }
-
-        async function loadTitles() {
-            const container = document.getElementById('titlesList');
-            container.innerHTML = "Завантаження...";
-            try {
-                const res = await fetch(`${API_URL}/api/titles`);
-                const data = await res.json();
-                container.innerHTML = "";
-                
-                data.titles.forEach(t => {
-                    let btnHtml = t.owner 
-                        ? `<div style="color: var(--gold); font-weight:bold;">Власник: ${t.owner}</div>`
-                        : `<button class="btn gold" onclick="claimTitle('${t.id}')">Спробувати отримати</button>`;
-                        
-                    container.innerHTML += `
-                        <div class="stat-box" style="text-align:left; margin-bottom:10px;">
-                            <div style="color: var(--gold); font-weight: bold; font-size:16px;">${t.name}</div>
-                            <div style="font-size: 12px; color: #aaa; margin: 5px 0;">${t.desc}</div>
-                            <div style="font-size: 11px; color: #666; margin-bottom:10px;">Потрібен рівень: ${t.req_level}</div>
-                            ${btnHtml}
                         </div>
                     `;
+                    container.innerHTML += html;
                 });
-            } catch(e) { container.innerHTML = "Помилка"; }
-        }
-
-        async function claimTitle(titleId) {
-            try {
-                const res = await fetch(`${API_URL}/api/claim_title`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, title_id: titleId })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") { init(); loadTitles(); }
-            } catch(e) { tg.showAlert("Помилка"); }
-        }
-
-        async function hireNpc(type) {
-            try {
-                const res = await fetch(`${API_URL}/api/hire_npc`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, type: type })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") init();
-            } catch(e) { tg.showAlert("Помилка"); }
-        }
-
-        async function attackPlayer(targetId) {
-            if(!confirm("Ви впевнені, що хочете напасти? Ліміт: 2 атаки на годину.")) return;
-            try {
-                const res = await fetch(`${API_URL}/api/attack`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ attacker_id: userId, target_id: targetId })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") init();
-            } catch(e) { tg.showAlert("Помилка атаки"); }
+            } catch (e) { tg.showAlert("Помилка карти"); }
         }
 
         init();
