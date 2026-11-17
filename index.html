@@ -2,12 +2,12 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shadow Syndicate</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
     <style>
         :root { --bg: #0a0a0a; --panel: #1a1a1a; --accent: #ff0055; --text: #ffffff; --gold: #ffd700; --green: #00ff88; --cyan: #00e5ff; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
         
         .top-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #111; border-bottom: 1px solid #333; z-index: 50; }
         .clock-box { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #aaa; }
@@ -81,9 +81,21 @@
         .error-screen.active { display: flex; }
         .support-box { display: none; width: 100%; margin-top: 10px; }
         .support-box textarea { width: 100%; height: 80px; background: #111; border: 1px solid #333; color: white; border-radius: 8px; padding: 10px; box-sizing: border-box; }
+
+        /* Екран завантаження */
+        #loadingScreen { position:fixed; inset:0; z-index:1000; display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden; background:#050203; transition:opacity .3s ease, visibility .3s ease; }
+        #loadingScreen.is-hidden { opacity:0; visibility:hidden; pointer-events:none; }
+        .loader-title { color: var(--accent); font-size: 32px; text-shadow: 0 0 20px var(--accent); font-weight: 900; letter-spacing: 2px; animation: pulse 1.5s infinite alternate; }
+        .loader-sub { color: #666; letter-spacing: 5px; margin-top: 10px; font-size: 12px; }
+        @keyframes pulse { from { opacity: 0.8; transform: scale(0.98); } to { opacity: 1; transform: scale(1.02); } }
     </style>
 </head>
 <body>
+
+    <div id="loadingScreen">
+        <div class="loader-title">SHADOW SYNDICATE</div>
+        <div class="loader-sub">ЗАВАНТАЖЕННЯ...</div>
+    </div>
 
     <div class="top-header">
         <div class="clock-box"><span>⏱</span><span id="gameTimeDisplay">Завантаження...</span></div>
@@ -93,6 +105,7 @@
         <span id="newsText">Завантаження новин...</span>
     </div>
 
+    <!-- ЕКРАН СТВОРЕННЯ -->
     <div id="setupScreen" class="setup-screen">
         <h1>Хто ти?</h1>
         <p style="color: #aaa; font-size: 14px;">Придумай свій псевдонім.</p>
@@ -107,6 +120,7 @@
         <button class="btn" id="checkNickBtn" onclick="checkNickname()" style="max-width: 250px;">Перевірити нік</button>
     </div>
 
+    <!-- ГОЛОВНА -->
     <div id="homeTab" class="screen">
         <div class="profile-header">
             <div class="right-hand-box" onclick="openNpcModal()">
@@ -145,6 +159,7 @@
         </div>
     </div>
 
+    <!-- КАРТА -->
     <div id="mapTab" class="screen">
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
             <button class="btn" style="background: #333;" onclick="loadMap('city17')">Сіті 17</button>
@@ -153,13 +168,16 @@
         <div class="map-container" id="mapContainer"></div>
     </div>
     
+    <!-- ТИТУЛИ -->
     <div id="titlesTab" class="screen">
         <h2>👑 Епічні Клікухи</h2>
         <div id="titlesList"></div>
     </div>
 
+    <!-- ОБМІННИК -->
     <div id="exchangeTab" class="screen"><h2>💸 Обмінник</h2></div>
 
+    <!-- НИЖНЄ МЕНЮ -->
     <div class="bottom-nav" id="bottomNav" style="display: none;">
         <button class="nav-btn active" onclick="switchTab('home', this)"><span>🏠</span> Головна</button>
         <button class="nav-btn" onclick="switchTab('map', this)"><span>🗺️</span> Карта</button>
@@ -167,7 +185,7 @@
         <button class="nav-btn" onclick="switchTab('exchange', this)"><span>💸</span> Обмін</button>
     </div>
 
-    <!-- МОДАЛЬНЕ ВІКНО ДЛЯ NPC -->
+    <!-- МОДАЛЬНЕ ВІКНО NPC -->
     <div class="modal" id="npcModal">
         <div class="modal-content">
             <h2 style="color: var(--gold); font-size: 18px;">Оберіть Праву Руку</h2>
@@ -187,6 +205,7 @@
         </div>
     </div>
 
+    <!-- МОДАЛЬНЕ ВІКНО ЗАКІНЧЕННЯ ДНЯ -->
     <div class="modal" id="endDayModal">
         <div class="modal-content">
             <h2 style="color: var(--gold); font-size: 20px;">🌙 День завершено!</h2>
@@ -195,6 +214,7 @@
         </div>
     </div>
 
+    <!-- ЕКРАН ПОМИЛКИ -->
     <div class="error-screen" id="errorScreen">
         <div style="font-size: 60px; margin-bottom: 10px;">🚧</div>
         <h2 style="color: #ff4d4d;">Помилка з'єднання</h2>
@@ -221,6 +241,11 @@
         let newsInterval = null;
         let chosenNick = "";
         const defaultAvatar = "https://i.ibb.co/6H5x6QY/empty-npc.png";
+
+        // Приховуємо екран завантаження через 1 секунду
+        setTimeout(() => {
+            document.getElementById('loadingScreen').classList.add('is-hidden');
+        }, 1000);
 
         async function loadNews() {
             try {
@@ -275,49 +300,178 @@
             } catch(e) { tg.showAlert("❌ Помилка"); }
         }
 
-        // Функції для аватарки
-        function changeAvatar() {
-            if(playerData.avatar_url) {
-                document.getElementById('avatarUrlInput').value = playerData.avatar_url;
-            }
-            document.getElementById('avatarModal').classList.add('active');
-        }
-
-        async function saveAvatar() {
-            const url = document.getElementById('avatarUrlInput').value.trim();
-            if(!url) return;
+        async function createPlayer(type) {
             try {
-                const res = await fetch(`${API_URL}/api/update_avatar`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, avatar_url: url })
+                const res = await fetch(`${API_URL}/api/create_player`, {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user_id: userId, 
+                        username: tgUsername, 
+                        nickname: chosenNick, 
+                        business_type: type 
+                    })
                 });
                 const data = await res.json();
-                if(data.status === "success") {
-                    document.getElementById('avatarModal').classList.remove('active');
-                    init();
+                if (data.status === "success") { 
+                    init(); 
+                } else { 
+                    tg.showAlert("Помилка: " + (data.message || "Невідома помилка")); 
                 }
-            } catch(e) { tg.showAlert("Помилка"); }
+            } catch (e) { 
+                tg.showAlert("Помилка з'єднання з сервером"); 
+            }
         }
 
-        // Функції для NPC
-        async function openNpcModal() {
-            if(playerData.level < 20) {
-                tg.showAlert("Права рука доступна з 20 рівня!");
-                return;
+        async function init() {
+            try {
+                const res = await fetch(`${API_URL}/api/player/${userId}`);
+                const data = await res.json();
+                if (data.status === "new") {
+                    document.getElementById('setupScreen').classList.add('active');
+                } else {
+                    playerData = data.player;
+                    document.getElementById('setupScreen').classList.remove('active');
+                    document.getElementById('homeTab').classList.add('active');
+                    document.getElementById('bottomNav').style.display = 'flex';
+                    updateUI();
+                    startTimer();
+                    loadNews();
+                    if(newsInterval) clearInterval(newsInterval);
+                    newsInterval = setInterval(loadNews, 30000);
+                }
+            } catch (e) { 
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById('errorScreen').classList.add('active');
             }
-            if(playerData.npc.right_hand_npc_id > 0) {
-                tg.showAlert("У вас вже є права рука!");
-                return;
+        }
+
+        function updateUI() {
+            if(!playerData) return;
+            document.getElementById('homeNickname').innerText = playerData.nickname;
+            if (playerData.title) {
+                document.getElementById('homeTitle').style.display = 'block';
+                document.getElementById('homeTitle').innerText = `« ${playerData.title} »`;
             }
+            document.getElementById('homeLevel').innerText = "Рівень " + playerData.level;
+            document.getElementById('homeBalance').innerText = playerData.balance.toFixed(0);
+            let xpPercent = (playerData.xp / playerData.xp_needed) * 100;
+            document.getElementById('xpFill').style.width = xpPercent + "%";
+            document.getElementById('xpText').innerText = `${playerData.xp} / ${playerData.xp_needed} XP`;
+            let anger = Math.min(100, playerData.total_anger);
+            document.getElementById('angerText').innerText = anger + "%";
+            document.getElementById('angerFill').style.width = anger + "%";
+
+            document.getElementById('playerAvatarImg').src = playerData.avatar_url || defaultAvatar;
             
+            if (playerData.npc.right_hand_npc_id > 0) {
+                document.getElementById('rightHandImg').src = playerData.npc.npc_img;
+                document.getElementById('rightHandImg').style.borderColor = 'var(--gold)';
+            } else {
+                document.getElementById('rightHandImg').src = defaultAvatar;
+                document.getElementById('rightHandImg').style.borderColor = '#555';
+            }
+
+            if (playerData.level >= 20) {
+                document.getElementById('npcSection').style.display = 'block';
+                document.getElementById('bodyguardCount').innerText = playerData.npc.bodyguards;
+            }
+            if (playerData.day_completed) document.getElementById('endDayModal').classList.add('active');
+        }
+
+        function startTimer() {
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if(!playerData) return;
+                let left = playerData.time_left;
+                if (left <= 0) {
+                    document.getElementById('gameTimeDisplay').innerText = "День завершено!";
+                    document.getElementById('endDayModal').classList.add('active');
+                    return;
+                }
+                let h = Math.floor(left / 3600);
+                let m = Math.floor((left % 3600) / 60);
+                let s = left % 60;
+                document.getElementById('gameTimeDisplay').innerText = `${h}г ${m}хв ${s}с`;
+                playerData.time_left -= 1;
+            }, 1000);
+        }
+
+        async function endDayAction(action) {
+            try {
+                const res = await fetch(`${API_URL}/api/end_day`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, action: action })
+                });
+                const data = await res.json();
+                tg.showAlert(data.message);
+                if (data.status === "success") {
+                    document.getElementById('endDayModal').classList.remove('active');
+                    init();
+                }
+            } catch (e) { tg.showAlert("Помилка"); }
+        }
+
+        async function loadMap(region) {
+            const container = document.getElementById('mapContainer');
+            container.innerHTML = "<div style='text-align:center;'>Завантаження...</div>";
+            try {
+                const url = region === 'city17' ? `${API_URL}/api/map/city17` : `${API_URL}/api/map/dark_street/${userId}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (data.status === "locked") {
+                    container.innerHTML = `<div style="text-align:center; padding: 30px; color: #ff4d4d; font-weight: bold;">🔒 ${data.message}</div>`;
+                    return;
+                }
+                container.innerHTML = "";
+                if (data.businesses) {
+                    data.businesses.forEach(biz => {
+                        container.innerHTML += `
+                            <div class="stat-box" style="text-align:left; padding:15px; margin-bottom:10px;">
+                                <div style="font-weight:bold;">${biz.name}</div>
+                                <div style="font-size: 12px; color: var(--green);">Дохід: ${biz.income} DC</div>
+                            </div>
+                        `;
+                    });
+                }
+                if (data.players && data.players.length > 0) {
+                    container.innerHTML += "<h3 style='text-align:center; color:var(--accent); margin-top:20px;'>Гравці поруч</h3>";
+                    data.players.forEach(p => {
+                        container.innerHTML += `
+                            <div class="stat-box" style="text-align:left; padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <div style="font-weight:bold;">${p.nickname}</div>
+                                    <div style="font-size: 12px; color: #aaa;">Рівень: ${p.level}</div>
+                                </div>
+                                <button class="btn" style="width:100px; background:#ff0055;" onclick="attackPlayer('${p.user_id}')">Напасти</button>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (e) { container.innerHTML = "Помилка завантаження"; }
+        }
+
+        async function attackPlayer(targetId) {
+            if(!confirm("Ви впевнені, що хочете напасти? Ліміт: 2 атаки на годину.")) return;
+            try {
+                const res = await fetch(`${API_URL}/api/attack`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ attacker_id: userId, target_id: targetId })
+                });
+                const data = await res.json();
+                tg.showAlert(data.message);
+                if(data.status === "success") init();
+            } catch(e) { tg.showAlert("Помилка атаки"); }
+        }
+
+        async function openNpcModal() {
+            if(playerData.level < 20) { tg.showAlert("Права рука доступна з 20 рівня!"); return; }
+            if(playerData.npc.right_hand_npc_id > 0) { tg.showAlert("У вас вже є права рука!"); return; }
             try {
                 const res = await fetch(`${API_URL}/api/available_npcs/${userId}`);
                 const data = await res.json();
-                
-                if(data.status === "locked") {
-                    tg.showAlert(data.message);
-                    return;
-                }
+                if(data.status === "locked") { tg.showAlert(data.message); return; }
                 
                 const container = document.getElementById('npcList');
                 container.innerHTML = "";
@@ -349,151 +503,37 @@
             } catch(e) { tg.showAlert("Помилка"); }
         }
 
-        async function init() {
+        async function hireNpc(type) {
             try {
-                const res = await fetch(`${API_URL}/api/player/${userId}`);
-                const data = await res.json();
-                if (data.status === "new") {
-                    document.getElementById('setupScreen').classList.add('active');
-                } else {
-                    playerData = data.player;
-                    document.getElementById('setupScreen').classList.remove('active');
-                    document.getElementById('homeTab').classList.add('active');
-                    document.getElementById('bottomNav').style.display = 'flex';
-                    updateUI();
-                    startTimer();
-                    loadNews();
-                    if(newsInterval) clearInterval(newsInterval);
-                    newsInterval = setInterval(loadNews, 30000);
-                }
-            } catch (e) { 
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById('errorScreen').classList.add('active');
-            }
-        }
-
-        function updateUI() {
-            if(!playerData) return;
-            document.getElementById('homeNickname').innerText = playerData.nickname;
-            
-            if (playerData.title) {
-                document.getElementById('homeTitle').style.display = 'block';
-                document.getElementById('homeTitle').innerText = `« ${playerData.title} »`;
-            }
-            
-            document.getElementById('homeLevel').innerText = "Рівень " + playerData.level;
-            document.getElementById('homeBalance').innerText = playerData.balance.toFixed(0);
-            let xpPercent = (playerData.xp / playerData.xp_needed) * 100;
-            document.getElementById('xpFill').style.width = xpPercent + "%";
-            document.getElementById('xpText').innerText = `${playerData.xp} / ${playerData.xp_needed} XP`;
-            let anger = Math.min(100, playerData.total_anger);
-            document.getElementById('angerText').innerText = anger + "%";
-            document.getElementById('angerFill').style.width = anger + "%";
-
-            // Аватарка гравця
-            document.getElementById('playerAvatarImg').src = playerData.avatar_url || defaultAvatar;
-            
-            // Права рука
-            if (playerData.npc.right_hand_npc_id > 0) {
-                document.getElementById('rightHandImg').src = playerData.npc.npc_img;
-                document.getElementById('rightHandImg').style.borderColor = 'var(--gold)';
-            } else {
-                document.getElementById('rightHandImg').src = defaultAvatar;
-                document.getElementById('rightHandImg').style.borderColor = '#555';
-            }
-
-            if (playerData.level >= 20) {
-                document.getElementById('npcSection').style.display = 'block';
-                document.getElementById('bodyguardCount').innerText = playerData.npc.bodyguards;
-            }
-
-            if (playerData.day_completed) document.getElementById('endDayModal').classList.add('active');
-        }
-
-        function startTimer() {
-            if(timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if(!playerData) return;
-                let left = playerData.time_left;
-                if (left <= 0) {
-                    document.getElementById('gameTimeDisplay').innerText = "День завершено!";
-                    document.getElementById('endDayModal').classList.add('active');
-                    return;
-                }
-                let h = Math.floor(left / 3600);
-                let m = Math.floor((left % 3600) / 60);
-                let s = left % 60;
-                document.getElementById('gameTimeDisplay').innerText = `${h}г ${m}хв ${s}с`;
-                playerData.time_left -= 1;
-            }, 1000);
-        }
-
-        async function createPlayer(type) {
-            try {
-                const res = await fetch(`${API_URL}/api/create_player`, {
+                const res = await fetch(`${API_URL}/api/hire_npc`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, username: tgUsername, nickname: chosenNick, business_type: type })
-                });
-                const data = await res.json();
-                if (data.status === "success") { init(); }
-                else { tg.showAlert("Помилка: " + data.message); }
-            } catch (e) { tg.showAlert("Помилка з'єднання"); }
-        }
-
-        async function endDayAction(action) {
-            try {
-                const res = await fetch(`${API_URL}/api/end_day`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, action: action })
+                    body: JSON.stringify({ user_id: userId, type: type })
                 });
                 const data = await res.json();
                 tg.showAlert(data.message);
-                if (data.status === "success") {
-                    document.getElementById('endDayModal').classList.remove('active');
-                    init();
-                }
-            } catch (e) { tg.showAlert("Помилка"); }
+                if(data.status === "success") init();
+            } catch(e) { tg.showAlert("Помилка"); }
         }
 
-        async function loadMap(region) {
-            const container = document.getElementById('mapContainer');
-            container.innerHTML = "<div style='text-align:center;'>Завантаження...</div>";
+        function changeAvatar() {
+            if(playerData.avatar_url) { document.getElementById('avatarUrlInput').value = playerData.avatar_url; }
+            document.getElementById('avatarModal').classList.add('active');
+        }
+
+        async function saveAvatar() {
+            const url = document.getElementById('avatarUrlInput').value.trim();
+            if(!url) return;
             try {
-                const url = region === 'city17' ? `${API_URL}/api/map/city17` : `${API_URL}/api/map/dark_street/${userId}`;
-                const res = await fetch(url);
+                const res = await fetch(`${API_URL}/api/update_avatar`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, avatar_url: url })
+                });
                 const data = await res.json();
-                
-                if (data.status === "locked") {
-                    container.innerHTML = `<div style="text-align:center; padding: 30px; color: #ff4d4d; font-weight: bold;">🔒 ${data.message}</div>`;
-                    return;
+                if(data.status === "success") {
+                    document.getElementById('avatarModal').classList.remove('active');
+                    init();
                 }
-                
-                container.innerHTML = "";
-                if (data.businesses) {
-                    data.businesses.forEach(biz => {
-                        container.innerHTML += `
-                            <div class="stat-box" style="text-align:left; padding:15px; margin-bottom:10px;">
-                                <div style="font-weight:bold;">${biz.name}</div>
-                                <div style="font-size: 12px; color: var(--green);">Дохід: ${biz.income} DC</div>
-                            </div>
-                        `;
-                    });
-                }
-                if (data.players && data.players.length > 0) {
-                    container.innerHTML += "<h3 style='text-align:center; color:var(--accent); margin-top:20px;'>Гравці поруч</h3>";
-                    data.players.forEach(p => {
-                        container.innerHTML += `
-                            <div class="stat-box" style="text-align:left; padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                                <div>
-                                    <div style="font-weight:bold;">${p.nickname}</div>
-                                    <div style="font-size: 12px; color: #aaa;">Рівень: ${p.level}</div>
-                                </div>
-                                <button class="btn" style="width:100px; background:#ff0055;" onclick="attackPlayer('${p.user_id}')">Напасти</button>
-                            </div>
-                        `;
-                    });
-                }
-            } catch (e) { container.innerHTML = "Помилка завантаження"; }
+            } catch(e) { tg.showAlert("Помилка"); }
         }
 
         async function loadTitles() {
@@ -503,12 +543,10 @@
                 const res = await fetch(`${API_URL}/api/titles`);
                 const data = await res.json();
                 container.innerHTML = "";
-                
                 data.titles.forEach(t => {
                     let btnHtml = t.owner 
                         ? `<div style="color: var(--gold); font-weight:bold;">Власник: ${t.owner}</div>`
                         : `<button class="btn gold" onclick="claimTitle('${t.id}')">Спробувати отримати</button>`;
-                        
                     container.innerHTML += `
                         <div class="stat-box" style="text-align:left; margin-bottom:10px;">
                             <div style="color: var(--gold); font-weight: bold; font-size:16px;">${t.name}</div>
@@ -531,31 +569,6 @@
                 tg.showAlert(data.message);
                 if(data.status === "success") { init(); loadTitles(); }
             } catch(e) { tg.showAlert("Помилка"); }
-        }
-
-        async function hireNpc(type) {
-            try {
-                const res = await fetch(`${API_URL}/api/hire_npc`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, type: type })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") init();
-            } catch(e) { tg.showAlert("Помилка"); }
-        }
-
-        async function attackPlayer(targetId) {
-            if(!confirm("Ви впевнені, що хочете напасти? Ліміт: 2 атаки на годину.")) return;
-            try {
-                const res = await fetch(`${API_URL}/api/attack`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ attacker_id: userId, target_id: targetId })
-                });
-                const data = await res.json();
-                tg.showAlert(data.message);
-                if(data.status === "success") init();
-            } catch(e) { tg.showAlert("Помилка атаки"); }
         }
 
         init();
