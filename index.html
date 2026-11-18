@@ -9,7 +9,8 @@
         :root { --bg: #0a0a0a; --panel: #1a1a1a; --accent: #ff0055; --text: #ffffff; --gold: #ffd700; --green: #00ff88; --cyan: #00e5ff; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: #111; border-bottom: 1px solid #333; z-index: 50; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: #111; border-bottom: 1px solid #333; z-index: 50; }
+        .wallet-head{display:flex;flex-direction:column;align-items:flex-end;gap:2px}.wallet-main{display:flex;align-items:center;gap:5px;color:var(--gold);font-size:13px;font-weight:900}.wallet-toggle{border:0;background:none;color:var(--gold);font-size:17px;padding:0 4px}.wallet-gram{display:none;color:var(--cyan);font-size:11px;background:#142737;padding:3px 7px;border-radius:7px}.wallet-gram.open{display:block}.details-btn{margin:8px 0 12px;background:#1b3045;border:1px solid #526e88;color:#d9eaff;border-radius:10px;padding:10px;font-weight:800}.inventory-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.inventory-card{background:linear-gradient(145deg,#1d3044,#101b29);border:1px solid #405a73;border-radius:13px;padding:12px;text-align:center}.inventory-art{height:52px;padding:6px;background:#0b1521;border-radius:9px;margin-bottom:8px;display:grid;place-items:center}.inventory-art svg{width:48px;height:48px;display:block}.inventory-name{font-size:12px;font-weight:900}.inventory-meta{font-size:10px;color:#9db4ca;margin-top:5px}.inventory-qty{font-size:11px;color:#8de7b4;font-weight:900;margin-top:5px}.ticker-event{cursor:pointer;text-align:center;padding:6px 8px;white-space:normal;color:var(--gold);font-size:11px;font-weight:900}
         .clock-box { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #aaa; }
         
         .news-ticker { background: #220000; border-bottom: 1px solid #550000; padding: 5px 0; white-space: nowrap; overflow: hidden; box-sizing: border-box; }
@@ -212,12 +213,10 @@
 
     <div class="top-header">
         <div class="clock-box"><span>⏱</span><span id="gameTimeDisplay">Завантаження...</span></div>
-        <div style="font-size:13px;font-weight:900;color:var(--gold);"><span data-icon="money"></span> <span id="headerBalance">0</span> DC</div>
+        <div class="wallet-head"><div class="wallet-main"><span data-icon="money"></span><span id="headerBalance">0</span> DC <button class="wallet-toggle" id="walletToggle" onclick="toggleWallet()">⌄</button></div><div class="wallet-gram" id="headerGramRow">GRAM: <span id="headerGram">0</span></div></div>
     </div>
     
-    <div class="news-ticker ticker-hidden" id="newsTicker">
-        <span id="newsText"></span>
-    </div>
+    <div class="news-ticker ticker-hidden" id="newsTicker" onclick="openFactoryFromTicker()" role="button" tabindex="0"><div class="ticker-event" id="newsText"></div></div>
 
     <div id="setupScreen" class="setup-screen">
         <div id="nicknameStep">
@@ -262,7 +261,7 @@
 
     <div id="homeTab" class="screen">
         <div class="profile-header">
-            <div class="right-hand-box" onclick="openNpcModal()">
+            <div class="right-hand-box" id="rightHandBox" onclick="openNpcModal()" style="display:none">
                 <img id="rightHandImg" class="right-hand-avatar" src="https://i.ibb.co/6H5x6QY/empty-npc.png" alt="Права рука">
                 <div class="right-hand-label">Права рука</div>
             </div>
@@ -280,10 +279,7 @@
             </div>
         </div>
         
-        <div class="home-balance-panel">
-            <div class="profile-balance"><span id="homeBalance">0</span> <span style="font-size:16px;">DC</span></div>
-            <div style="font-size:12px;color:var(--cyan);">GRAM: <span id="homeGram">0</span></div>
-        </div>
+        <button class="details-btn" onclick="openPlayerDetails()">Детальніше про імперію</button>
         <div class="home-clock-panel">⏱ До збору прибутку: <b id="homeCollectTimer">Завантаження...</b></div>
         <div style="text-align:center;font-size:12px;color:var(--gold);margin-bottom:6px;">Бізнес-слоти: <span id="homeBizCount">0/3</span></div>
         <div id="businessSlots" class="business-slots"></div>
@@ -428,7 +424,8 @@
             <h2 style="color: var(--gold); font-size: 18px;" id="bizModalTitle">Бізнес</h2>
             <p style="color: #aaa; font-size: 12px;" id="bizModalDesc">Оберіть дію</p>
             
-            <button class="btn gold" id="btnBuyBiz" onclick="buyBiz(selectedBizId)" style="display:none;margin-bottom:10px;">Придбати ділянку</button>
+            <button class="btn gold" id="btnBuyBiz" onclick="buyBiz(selectedBizId)" style="display:none;margin-bottom:10px;">Придбати вільну ділянку</button>
+            <button class="btn gold" id="btnBuyOutBiz" onclick="buyOutAction()" style="display:none;margin-bottom:10px;">Викупити бізнес у NPC</button>
             <button class="btn green" id="btnCollectBiz" onclick="collectBusinessProfit()" style="display:none;margin-bottom:10px;">Забрати прибуток</button>
             <button class="btn green" id="btnUpgrade" onclick="upgradeBizAction()" style="margin-bottom:10px;">⬆️ Оновити бізнес</button>
             <button class="btn gold" id="btnTakeInterest" onclick="takeInterestAction()" style="margin-bottom:10px;">Взяти під відсоток</button>
@@ -504,12 +501,14 @@
         </div>
     </div>
 
+    <div class="modal" id="detailsModal"><div class="modal-content" style="max-width:360px;text-align:left"><h2 style="color:var(--gold);font-size:18px">Статистика імперії</h2><div id="playerDetailsContent" style="font-size:13px;line-height:1.8;color:#d6e2ee"></div><button class="btn gray" onclick="document.getElementById('detailsModal').classList.remove('active')">Закрити</button></div></div>
+    <div class="modal" id="taxModal"><div class="modal-content"><h2 style="color:var(--gold);font-size:18px">Час сплатити податки</h2><p id="taxModalText" style="font-size:13px;color:#c7d4e2">10% доходу бізнесів за останні 14 днів.</p><button class="btn green" onclick="payTaxesNow()">Сплатити податок</button><button class="btn gold" onclick="deferTaxes()">Відкласти на 2 години</button><button class="btn gray" onclick="document.getElementById('taxModal').classList.remove('active')">Закрити</button></div></div>
     <div class="modal" id="factoryModal">
         <div class="modal-content">
             <h2 style="color: var(--accent); font-size: 20px;"><span data-icon="factory"></span> Фабрика Зброї</h2>
             <p style="color: #aaa; font-size: 13px;" id="factoryTimer">Залишилось: 20:00</p>
             <button class="btn green" onclick="raidFactory(false)">Зробити набіг (Безкоштовно)</button>
-            <button class="btn gold" onclick="raidFactory(true)" style="margin-top:10px;">Зробити набіг (1 GRAM)</button>
+            <button class="btn gold" onclick="raidFactory(true)" style="margin-top:10px;">Повторна спроба (0.6 GRAM)</button>
             <button class="btn gray" style="margin-top: 15px;" onclick="document.getElementById('factoryModal').classList.remove('active')">Закрити</button>
         </div>
     </div>
@@ -557,25 +556,17 @@
 
         const apiHeaders = { "Content-Type": "application/json", "X-Telegram-Init-Data": INIT_DATA };
 
-        async function loadNews() {
-            try {
-                const res = await fetch(`${API_URL}/api/events`, { headers: apiHeaders });
-                const data = await res.json();
-                const ticker = document.getElementById('newsTicker');
-                const events = Array.isArray(data.events) ? data.events : [];
-                document.getElementById('newsText').innerText = events.join("  ⭐  ");
-                ticker.classList.toggle('ticker-hidden', events.length === 0);
-            } catch(e) {
-                document.getElementById('newsTicker').classList.add('ticker-hidden');
-            }
-        }
+        let factoryIsActive = false;
+        function toggleWallet(){const row=document.getElementById('headerGramRow');const open=row.classList.toggle('open');document.getElementById('walletToggle').textContent=open?'⌃':'⌄';}
+        function openFactoryFromTicker(){if(factoryIsActive)document.getElementById('factoryModal').classList.add('active');}
+        async function loadNews(){try{const res=await fetch(`${API_URL}/api/events`,{headers:apiHeaders});const data=await res.json();const events=Array.isArray(data.events)?data.events:[];factoryIsActive=!!data.factory_active;document.getElementById('newsText').innerText=events.length?events[0].text:'';document.getElementById('newsTicker').classList.toggle('ticker-hidden',events.length===0);}catch(e){factoryIsActive=false;document.getElementById('newsTicker').classList.add('ticker-hidden');}}
 
         async function checkFactory() {
             try {
                 const res = await fetch(`${API_URL}/api/factory/status`, { headers: apiHeaders });
                 const data = await res.json();
+                factoryIsActive = !!data.active;
                 if(data.active) {
-                    document.getElementById('factoryModal').classList.add('active');
                     let left = data.time_left;
                     const syncAt = Date.now();
                     if(factoryTimerInterval) clearInterval(factoryTimerInterval);
@@ -791,47 +782,7 @@
             } catch(e) { tg.showAlert("Помилка"); }
         }
 
-        async function loadInventory() {
-            const container = document.getElementById('inventoryList');
-            container.innerHTML = "Завантаження...";
-            try {
-                const res = await fetch(`${API_URL}/api/inventory/${userId}`, { headers: apiHeaders });
-                const data = await res.json();
-                container.innerHTML = "";
-                
-                if(!data.items || data.items.length === 0) {
-                    container.innerHTML = "<div style='text-align:center; color:#666;'>Інвентар порожній</div>";
-                    return;
-                }
-
-                let hasWeapon = false;
-                let hasAmmo = false;
-                
-                data.items.forEach(i => {
-                    if(i.item_type === 'weapon') hasWeapon = true;
-                    if(i.item_type === 'ammo') hasAmmo = true;
-                });
-
-                if(hasWeapon && !hasAmmo) {
-                    container.innerHTML += `<div style="color:var(--accent); text-align:center; margin-bottom:10px; font-size:12px;">Увага! Немає патронів, зброя не працює!</div>`;
-                }
-
-                data.items.forEach(i => {
-                    let name = i.item_name;
-                    let stats = "";
-                    if(i.item_type === 'weapon') stats = `+${Math.round(i.attack_bonus*100)}% до атаки`;
-                    else if(i.item_type === 'armor') stats = `+${Math.round(i.defense_bonus*100)}% до захисту`;
-                    else if(i.item_type === 'ammo') stats = `Кількість: ${i.quantity}`;
-                    
-                    container.innerHTML += `
-                        <div class="stat-box" style="text-align:left; margin-bottom:10px;">
-                            <div style="font-weight:bold; font-size:16px;">${name}</div>
-                            <div style="font-size: 12px; color: var(--green); margin: 5px 0;">${stats}</div>
-                        </div>
-                    `;
-                });
-            } catch(e) { container.innerHTML = "Помилка завантаження"; }
-        }
+        async function loadInventory(){const box=document.getElementById('inventoryList');box.innerHTML='Завантаження...';try{const r=await fetch(`${API_URL}/api/inventory/${userId}`,{headers:apiHeaders});const d=await r.json();const items=Array.isArray(d.items)?d.items:[];if(!items.length){box.innerHTML="<div style='text-align:center;color:#8da1b5;padding:24px'>Інвентар поки порожній</div>";return;}const types=[['weapon','Автоматична та інша зброя','<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M7 25h32l8 5h10v7H45l-6 6H27v-6H7z" fill="#9db9c9" stroke="#d5e5ed" stroke-width="2"/><path d="M19 43h10l-3 9H18zM44 30h8v7h-8z" fill="#526e83"/><path d="M12 20h22v5H12z" fill="#d6bd83"/></svg>'],['ammo','Боєприпаси','<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M22 10h20v8l5 8v26H17V26l5-8z" fill="#c9a85e" stroke="#f0d58e" stroke-width="2"/><path d="M22 18h20M17 43h30" stroke="#795b30" stroke-width="3"/><path d="M27 10q5-8 10 0" fill="#e7d8a9"/></svg>'],['armor','Броня','<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6 52 14v16q-2 17-20 28Q14 47 12 30V14z" fill="#567f91" stroke="#b8d8e5" stroke-width="3"/><path d="M32 15v33M19 23h26" stroke="#d8e9ee" stroke-width="3" opacity=".8"/></svg>'],['skin','Скіни','<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="11" y="8" width="42" height="48" rx="7" fill="#765d9c" stroke="#c8b8e7" stroke-width="2"/><path d="M18 42 29 24l7 10 5-7 7 15z" fill="#b6e2d2"/><circle cx="24" cy="18" r="4" fill="#f1d18a"/></svg>']];box.innerHTML=types.map(([type,label,icon])=>{const arr=items.filter(i=>i.item_type===type);if(!arr.length)return '';return `<h3 style="color:var(--cyan);font-size:13px;margin:14px 0 8px">${label}</h3><div class="inventory-grid">${arr.map(i=>{const stat=type==='weapon'?`+${Math.round(Number(i.attack_bonus||0)*100)}% до атаки`:type==='armor'?`+${Math.round(Number(i.defense_bonus||0)*100)}% до захисту`:type==='ammo'?'Боєзапас':'Косметичний предмет';return `<div class="inventory-card"><div class="inventory-art">${icon}</div><div class="inventory-name">${escapeHtml(i.item_name||label)}</div><div class="inventory-meta">${stat}</div><div class="inventory-qty">Кількість: ${Number(i.quantity||0)}</div></div>`;}).join('')}</div>`;}).join('');}catch(e){box.innerHTML='Помилка завантаження інвентарю';}}
 
         async function upgradeBizAction() {
             if(!selectedBizId) return;
@@ -860,11 +811,12 @@
                     document.getElementById('homeTab').classList.add('active');
                     document.getElementById('bottomNav').style.display = 'flex';
                     updateUI();
+                    if(playerData.tax && playerData.tax.is_due && Number(playerData.tax.deferred_until||0)<=Math.floor(Date.now()/1000)){document.getElementById('taxModalText').innerText=`До сплати ${Number(playerData.tax.amount||0)} DC. Якщо відкласти сплату, після дедлайну бізнес може бути заарештований.`;document.getElementById('taxModal').classList.add('active');}
                     loadMyBusinessSlots();
                     startTimer();
                     loadNews();
                     if(newsInterval) clearInterval(newsInterval);
-                    newsInterval = setInterval(loadNews, 30000);
+                    newsInterval = setInterval(loadNews, 60000);
                     if(factoryCheckInterval) clearInterval(factoryCheckInterval);
                     factoryCheckInterval = setInterval(checkFactory, 60000);
                     checkFactory();
@@ -1002,7 +954,8 @@
                 businesses.slice(0, maxSlots).forEach((biz, index) => {
                     const tile = document.createElement('div');
                     tile.className = 'business-slot';
-                    tile.innerHTML = `<div><div class="business-art">${businessIllustration(biz.name)}</div><div class="business-name">${escapeHtml(biz.name)} · Рів. ${biz.level || 1}</div><div class="business-meta">Пасивний дохід: ${Number(biz.income || 0)} DC</div></div><button class="btn ${playerData.day_completed ? 'green' : 'gray'}" ${playerData.day_completed ? '' : 'disabled'}>${playerData.day_completed ? 'Забрати прибуток' : 'Очікування збору'}</button>`;
+                    const arrested=!!biz.is_arrested, working=biz.operational!==0;
+                    tile.innerHTML = `<div><div class="business-art">${businessIllustration(biz.name)}</div><div class="business-name">${escapeHtml(biz.name)} · Рів. ${biz.level || 1}</div><div class="business-meta">${arrested?'🚔 Заарештований':(working?'🟢 Працює':'⚪ Не працює')} · Дохід: ${Number(biz.income || 0)} DC</div></div><button class="btn ${playerData.day_completed && !arrested && working ? 'green' : 'gray'}" ${playerData.day_completed && !arrested && working ? '' : 'disabled'}>${arrested?'Потрібно звільнити':(playerData.day_completed ? 'Забрати прибуток' : 'Очікування збору')}</button>`;
                     tile.querySelector('button').addEventListener('click', collectBusinessProfit);
                     grid.appendChild(tile);
                 });
@@ -1088,7 +1041,6 @@
                 }
                 const reward = Number(data.reward || 0);
                 playerData.balance = Number(playerData.balance || 0) + reward;
-                document.getElementById('homeBalance').innerText = Math.round(playerData.balance);
                 document.getElementById('headerBalance').innerText = Math.round(playerData.balance);
                 result.innerText = data.message || `Код перевірено. Нагорода: ${reward} DC.`;
                 result.style.color = '#e7c783';
@@ -1124,9 +1076,8 @@
             }
             
             document.getElementById('homeLevel').innerText = "Рівень " + playerData.level;
-            document.getElementById('homeBalance').innerText = Math.round(playerData.balance);
             document.getElementById('headerBalance').innerText = Math.round(playerData.balance);
-            document.getElementById('homeGram').innerText = playerData.gram_balance || 0;
+            document.getElementById('headerGram').innerText = Number(playerData.gram_balance || 0).toFixed(1).replace(/\.0$/, '');
             document.getElementById('homeBizCount').innerText = `${playerData.biz_count}/${playerData.max_biz}`;
             
             let xpPercent = (playerData.xp / playerData.xp_needed) * 100;
@@ -1137,14 +1088,9 @@
             document.getElementById('angerFill').style.width = anger + "%";
 
             document.getElementById('playerAvatarImg').src = playerData.avatar_url || defaultAvatar;
-            
-            if (playerData.npc.right_hand_npc_id > 0) {
-                document.getElementById('rightHandImg').src = playerData.npc.npc_img;
-                document.getElementById('rightHandImg').style.borderColor = 'var(--gold)';
-            } else {
-                document.getElementById('rightHandImg').src = defaultAvatar;
-                document.getElementById('rightHandImg').style.borderColor = '#555';
-            }
+            const hasRightHand = Number(playerData.npc?.right_hand_npc_id || 0) > 0;
+            document.getElementById('rightHandBox').style.display = hasRightHand ? 'flex' : 'none';
+            if (hasRightHand) { document.getElementById('rightHandImg').src = defaultAvatar; document.getElementById('rightHandImg').style.borderColor = 'var(--gold)'; }
 
             if (playerData.level >= 20) {
                 document.getElementById('npcSection').style.display = 'block';
@@ -1154,6 +1100,11 @@
             if (playerData.day_completed) document.getElementById('endDayModal').classList.add('active');
             updateBankUI();
         }
+
+        function openPlayerDetails(){if(!playerData)return;const s=playerData.stats||{},t=playerData.tax||{};document.getElementById('playerDetailsContent').innerHTML=`<div>🏢 Усього бізнесів: <b>${s.businesses||0}</b></div><div>🟢 Працюють: <b>${s.working_businesses||0}</b></div><div>🚔 Заарештовані: <b>${s.arrested_businesses||0}</b></div><div>🛡️ Охоронці: <b>${s.bodyguards||0}</b></div><div>🤝 Права рука: <b>${s.has_right_hand?'Є':'Немає'}</b></div><div>🏴 Клан: <b>${escapeHtml(s.clan_name||'Немає')}</b></div><div>💰 Податки до сплати: <b>${t.amount||0} DC</b></div><small>Податок: 10% доходу бізнесів за останні 14 днів.</small>`;document.getElementById('detailsModal').classList.add('active');if(Number(s.arrested_businesses||0)>0){fetch(`${API_URL}/api/businesses/${userId}`,{headers:apiHeaders}).then(r=>r.json()).then(d=>(d.businesses||[]).filter(b=>b.is_arrested).forEach(b=>{const x=document.createElement('button');x.className='btn gold';x.textContent=`Звільнити ${b.name} (податок × 2)`;x.onclick=()=>unlockBusiness(b.id);document.getElementById('playerDetailsContent').appendChild(x);})).catch(()=>{});}}
+        async function payTaxesNow(){try{const r=await fetch(`${API_URL}/api/tax/pay`,{method:'POST',headers:apiHeaders,body:JSON.stringify({user_id:userId})});const d=await r.json();tg.showAlert(d.message||'');if(d.status==='success'){document.getElementById('taxModal').classList.remove('active');init();}}catch(e){tg.showAlert('Не вдалося сплатити податок.');}}
+        async function deferTaxes(){try{const r=await fetch(`${API_URL}/api/tax/defer`,{method:'POST',headers:apiHeaders,body:JSON.stringify({user_id:userId})});const d=await r.json();tg.showAlert(d.message||'');if(d.status==='success'){document.getElementById('taxModal').classList.remove('active');init();}}catch(e){tg.showAlert('Не вдалося відкласти сплату.');}}
+        async function unlockBusiness(id){try{const r=await fetch(`${API_URL}/api/business/unlock`,{method:'POST',headers:apiHeaders,body:JSON.stringify({user_id:userId,business_id:id})});const d=await r.json();tg.showAlert(d.message||'');if(d.status==='success'){document.getElementById('detailsModal').classList.remove('active');init();}}catch(e){tg.showAlert('Помилка звільнення бізнесу.');}}
 
         function startTimer() {
             if(timerInterval) clearInterval(timerInterval);
@@ -1221,9 +1172,10 @@
                 const cx=Number.isFinite(Number(biz.map_x))?Number(biz.map_x):anchor[0];
                 const cy=Number.isFinite(Number(biz.map_y))?Number(biz.map_y):anchor[1];
                 const isMine=!!biz.owner_id && String(biz.owner_id)===String(userId);
-                const isFree=!biz.owner_id;
-                const kind=isMine?'mine':(isFree?'free':'enemy');
-                const palette=isMine?{fill:'#344b50',stroke:'#e0bf78',building:'#98644b'}:isFree?{fill:'#46515a',stroke:'#9ba8b1',building:'#78858e'}:{fill:'#653b47',stroke:'#c87b83',building:'#a85b60'};
+                const isFree=!biz.owner_id && !biz.npc_owned;
+                const isNpc=!!biz.npc_owned && !biz.owner_id;
+                const kind=isMine?'mine':(isFree?'free':(isNpc?'npc':'enemy'));
+                const palette=isMine?{fill:'#344b50',stroke:'#e0bf78',building:'#98644b'}:isFree?{fill:'#46515a',stroke:'#9ba8b1',building:'#78858e'}:isNpc?{fill:'#3d4e68',stroke:'#83b7d9',building:'#597f9f'}:{fill:'#653b47',stroke:'#c87b83',building:'#a85b60'};
                 const shape=shapes[index%shapes.length];
                 const pts=shape.map(([dx,dy])=>`${cx+dx},${cy+dy}`).join(' ');
                 let buildings='';
@@ -1234,7 +1186,7 @@
                     buildings += `<g><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="2" fill="${palette.building}" stroke="#d4c4a2" stroke-opacity=".45"/><path d="M${bx-2} ${by}l${bw/2+2} -8 ${bw/2+2} 8" fill="#b9a27c" stroke="#d8c9a8" stroke-width="1"/><rect x="${bx+5}" y="${by+5}" width="4" height="5" fill="#e1c98c" opacity=".75"/></g>`;
                 }
                 const name=escapeHtml(biz.name || (isFree?'Вільна ділянка':'Бізнес'));
-                const owner=isFree?'ВІЛЬНА ДІЛЯНКА':(isMine?'ВАША ТЕРИТОРІЯ':`ВЛАСНИК: ${escapeHtml(biz.owner_name || 'ГРАВЕЦЬ')}`);
+                const owner=isFree?'ВІЛЬНА ДІЛЯНКА':(isMine?'ВАША ТЕРИТОРІЯ':(isNpc?'NPC · МОЖНА ВИКУПИТИ':`ВЛАСНИК: ${escapeHtml(biz.owner_name || 'ГРАВЕЦЬ')}`));
                 groups += `<g class="territory-group territory-${kind}" data-biz-index="${index}" tabindex="0" role="button" aria-label="${name}">
                     <polygon class="territory-shape" points="${pts}" fill="${palette.fill}" fill-opacity="${isFree?'.40':'.82'}" stroke="${palette.stroke}" stroke-dasharray="${isFree?'7 5':'none'}"/>
                     <path d="M${cx-45} ${cy+43} Q${cx} ${cy+31} ${cx+48} ${cy+42}" fill="none" stroke="#d5c9a1" stroke-opacity=".22" stroke-width="4"/>
@@ -1276,9 +1228,9 @@
                             const biz=businesses[Number(group.dataset.bizIndex)];
                             if(!biz) return;
                             const isMine=!!biz.owner_id && String(biz.owner_id)===String(userId);
-                            const isFree=!biz.owner_id;
-                            const ownerName=isMine?'Ви':(biz.owner_name||'Невідомо');
-                            openBizModal(biz.id,biz.name,{isMine,isFree,income:biz.income,level:biz.level,ownerName});
+                            const isFree=!biz.owner_id && !biz.npc_owned;
+                            const ownerName=isMine?'Ви':(biz.owner_name||(biz.npc_owned?'NPC':'Невідомо'));
+                            openBizModal(biz.id,biz.name,{isMine,isFree,npcOwned:!!biz.npc_owned,isArrested:!!biz.is_arrested,operational:biz.operational!==0,income:biz.income,level:biz.level,ownerName});
                         };
                         group.addEventListener('click',activate);
                         group.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}});
@@ -1313,19 +1265,18 @@
             } catch (e) { tg.showAlert("Помилка"); }
         }
 
-        function openBizModal(bizId, bizName, details={}) {
-            selectedBizId = bizId;
-            document.getElementById('bizModalTitle').innerText = bizName;
-            const desc = document.getElementById('bizModalDesc');
-            desc.innerText = details.isFree ? 'Вільна ділянка — об’єкт доступний для придбання.' : `Рівень ${details.level || 1} · Дохід ${Number(details.income || 0)} DC · ${details.isMine ? 'Ваш об’єкт' : 'Власник: ' + (details.ownerName || 'інший гравець')}`;
-            const isFree = !!details.isFree;
-            const isMine = !!details.isMine;
-            document.getElementById('btnBuyBiz').style.display = isFree ? 'block' : 'none';
-            document.getElementById('btnCollectBiz').style.display = isMine ? 'block' : 'none';
-            document.getElementById('btnUpgrade').style.display = (!isFree && isMine) ? 'block' : 'none';
-            document.getElementById('btnTakeInterest').style.display = (!isFree && !isMine) ? 'block' : 'none';
-            document.getElementById('btnDestroyBiz').style.display = (!isFree && !isMine) ? 'block' : 'none';
-            document.getElementById('btnSellBiz').style.display = isMine ? 'block' : 'none';
+        function openBizModal(bizId,bizName,details={}){
+            selectedBizId=bizId;document.getElementById('bizModalTitle').innerText=bizName;
+            const status=details.isArrested?' · ЗААРЕШТОВАНО':(details.operational===false?' · НЕ ПРАЦЮЄ':' · ПРАЦЮЄ');
+            document.getElementById('bizModalDesc').innerText=details.isFree?'Вільна ділянка — доступна для придбання.':`Рівень ${details.level||1} · Дохід ${Number(details.income||0)} DC${status} · ${details.isMine?'Ваш об’єкт':'Власник: '+(details.ownerName||'NPC')}`;
+            const free=!!details.isFree,mine=!!details.isMine;
+            document.getElementById('btnBuyBiz').style.display=free?'block':'none';
+            document.getElementById('btnBuyOutBiz').style.display=(!free&&!mine&&details.npcOwned)?'block':'none';
+            document.getElementById('btnCollectBiz').style.display=mine?'block':'none';
+            document.getElementById('btnUpgrade').style.display=(!free&&mine&&!details.isArrested)?'block':'none';
+            document.getElementById('btnTakeInterest').style.display=(!free&&!mine&&!details.npcOwned)?'block':'none';
+            document.getElementById('btnDestroyBiz').style.display=(!free&&!mine&&!details.npcOwned)?'block':'none';
+            document.getElementById('btnSellBiz').style.display=mine?'block':'none';
             document.getElementById('bizModal').classList.add('active');
         }
 
